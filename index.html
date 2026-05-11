@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,19 +8,20 @@
 
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
   <div class="container">
     <h1>TapDuel</h1>
 
     <h2 id="status">Enter your name</h2>
+    <div id="playerInfo">
+      <span id="youName"></span>
+      <span>VS</span>
+      <span id="enemyName"></span>
+    </div>
 
-    <input 
-      type="text" 
-      id="username" 
-      placeholder="Enter username" 
-      maxlength="12"
-    >
+    <input type="text" id="username" placeholder="Enter username" maxlength="12">
 
     <div class="menuButtons">
       <button id="startBtn">
@@ -32,12 +34,7 @@
     </div>
 
     <div id="roomSection">
-      <input
-        type="text"
-        id="roomInput"
-        placeholder="Enter Room Code"
-        maxlength="6"
-      >
+      <input type="text" id="roomInput" placeholder="Enter Room Code" maxlength="6">
 
       <button id="joinRoomBtn">
         JOIN ROOM
@@ -53,4 +50,5 @@
   <script src="script.js"></script>
 
 </body>
+
 </html>

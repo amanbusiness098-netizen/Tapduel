@@ -1,7 +1,11 @@
+let reactionInterval;
+let reactionStart;
 const socket = io("https://tapduel.onrender.com", {
   autoConnect: false
 });
 
+const youName = document.getElementById("youName");
+const enemyName = document.getElementById("enemyName");
 const statusText = document.getElementById("status");
 const tapBtn = document.getElementById("tapBtn");
 const startBtn = document.getElementById("startBtn");
@@ -132,6 +136,8 @@ socket.on("matchFound", (data) => {
   currentRoom = data.room;
   gameStarted = false;
   gameEnded = false;
+  youName.innerText = username;
+  enemyName.innerText = data.opponentName;
 
   statusText.innerText = "Match Found vs " + data.opponentName;
 
@@ -157,6 +163,15 @@ socket.on("startGame", () => {
 
   setTimeout(() => {
     gameStarted = true;
+    reactionStart = Date.now();
+
+    reactionInterval = setInterval(() => {
+
+      const current = Date.now() - reactionStart;
+
+      tapBtn.innerText = current + " ms";
+
+    }, 10);
 
     if (navigator.vibrate) {
       navigator.vibrate(120);
@@ -178,12 +193,13 @@ tapBtn.addEventListener("click", () => {
   }
 
   if (!gameStarted) return;
-
+  clearInterval(reactionInterval);
   socket.emit("tap", currentRoom);
   tapBtn.disabled = true;
 });
 
 socket.on("result", (data) => {
+  clearInterval(reactionInterval);
   gameEnded = true;
   gameStarted = false;
 

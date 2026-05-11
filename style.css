@@ -237,3 +237,21 @@ button:disabled {
     font-size: 18px;
   }
 }
+
+#playerInfo {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 25px;
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+}
+
+#youName {
+  color: #00ffff;
+}
+
+#enemyName {
+  color: #ff4d6d;
+}
