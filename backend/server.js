@@ -4,7 +4,6 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 
 const app = express();
-
 app.use(cors());
 
 const server = http.createServer(app);
@@ -18,63 +17,101 @@ const io = new Server(server, {
 let waitingPlayer = null;
 
 const rooms = {};
+const players = {};
+const privateRooms = {};
 
 io.on("connection", (socket) => {
 
     console.log("User connected:", socket.id);
 
-    if (waitingPlayer) {
+    // QUICK MATCH
+    socket.on("joinGame", (username) => {
 
-        const room = socket.id + "#" + waitingPlayer.id;
-        socket.join(room);
-        waitingPlayer.join(room);
-
-        rooms[room] = {
-            startTime: null,
-            gameStarted: false,
-            clicks: {},
-            players: [socket.id, waitingPlayer.id]
+        players[socket.id] = {
+            username: username || "Player"
         };
 
-        socket.emit("matchFound", room);
-        waitingPlayer.emit("matchFound", room);
+        if (waitingPlayer && waitingPlayer.connected && waitingPlayer.id !== socket.id) {
 
-        // random start
-        let countdown = 3;
+            const player1 = waitingPlayer;
+            const player2 = socket;
 
-        const countdownInterval = setInterval(() => {
+            createMatch(player1, player2);
 
-            io.to(room).emit("countdown", countdown);
+            waitingPlayer = null;
 
-            countdown--;
+        } else {
 
-            if (countdown < 0) {
+            waitingPlayer = socket;
+            socket.emit("waiting");
 
-                clearInterval(countdownInterval);
+        }
 
-                setTimeout(() => {
+    });
 
-                    rooms[room].gameStarted = true;
+    // CREATE PRIVATE ROOM
+    socket.on("createPrivateRoom", (username) => {
 
-                    rooms[room].startTime = Date.now();
+        players[socket.id] = {
+            username: username || "Player"
+        };
 
-                    io.to(room).emit("startGame");
+        const roomCode = generateRoomCode();
 
-                }, Math.random() * 2000 + 1000);
+        privateRooms[roomCode] = {
+            host: socket.id,
+            players: [socket.id]
+        };
 
-            }
+        socket.join(roomCode);
 
-        }, 1000);
+        socket.emit("privateRoomCreated", {
+            roomCode
+        });
 
-        waitingPlayer = null;
+        console.log("Private room created:", roomCode);
 
-    } else {
+    });
 
-        waitingPlayer = socket;
+    // JOIN PRIVATE ROOM
+    socket.on("joinPrivateRoom", (data) => {
 
-        socket.emit("waiting");
+        const username = data.username || "Player";
+        const roomCode = data.roomCode;
 
-    }
+        players[socket.id] = {
+            username
+        };
+
+        const privateRoom = privateRooms[roomCode];
+
+        if (!privateRoom) {
+            socket.emit("privateRoomError", "Room not found");
+            return;
+        }
+
+        if (privateRoom.players.length >= 2) {
+            socket.emit("privateRoomError", "Room is full");
+            return;
+        }
+
+        const hostId = privateRoom.host;
+        const hostSocket = io.sockets.sockets.get(hostId);
+
+        if (!hostSocket) {
+            socket.emit("privateRoomError", "Host left the room");
+            delete privateRooms[roomCode];
+            return;
+        }
+
+        privateRoom.players.push(socket.id);
+        socket.join(roomCode);
+
+        createMatch(hostSocket, socket, roomCode);
+
+        delete privateRooms[roomCode];
+
+    });
 
     // PLAYER TAP
     socket.on("tap", (room) => {
@@ -82,58 +119,193 @@ io.on("connection", (socket) => {
         const game = rooms[room];
 
         if (!game) return;
+        if (game.gameOver) return;
+        if (!game.players.includes(socket.id)) return;
+        if (game.clicks[socket.id]) return;
 
-        // EARLY CLICK = LOSE
         if (!game.gameStarted) {
+
+            game.gameOver = true;
 
             const opponent = game.players.find(id => id !== socket.id);
 
             io.to(room).emit("result", {
                 winner: opponent,
-                cheater: socket.id
+                cheater: socket.id,
+                winnerName: players[opponent]?.username || "Player",
+                t1: 0,
+                t2: 0
             });
 
-            delete rooms[room];
-
+            cleanupRoom(room);
             return;
         }
 
-        // NORMAL REACTION
         const reactionTime = Date.now() - game.startTime;
-
         game.clicks[socket.id] = reactionTime;
 
         console.log(socket.id, reactionTime);
 
-        // BOTH PLAYERS CLICKED
         if (Object.keys(game.clicks).length === 2) {
+
+            game.gameOver = true;
 
             const [p1, p2] = game.players;
 
             const t1 = game.clicks[p1];
             const t2 = game.clicks[p2];
 
-            let winner;
-
-            if (t1 < t2) {
-                winner = p1;
-            } else {
-                winner = p2;
-            }
+            const winner = t1 <= t2 ? p1 : p2;
 
             io.to(room).emit("result", {
                 winner,
                 t1,
-                t2
+                t2,
+                winnerName: players[winner]?.username || "Player"
             });
 
-            delete rooms[room];
+            cleanupRoom(room);
         }
+
+    });
+
+    // DISCONNECT
+    socket.on("disconnect", () => {
+
+        console.log("Disconnected:", socket.id);
+
+        if (waitingPlayer && waitingPlayer.id === socket.id) {
+            waitingPlayer = null;
+        }
+
+        for (const code in privateRooms) {
+            const privateRoom = privateRooms[code];
+
+            if (privateRoom.players.includes(socket.id)) {
+                io.to(code).emit("opponentLeft");
+                delete privateRooms[code];
+            }
+        }
+
+        for (const room in rooms) {
+
+            const game = rooms[room];
+
+            if (game.players.includes(socket.id)) {
+
+                const opponent = game.players.find(id => id !== socket.id);
+
+                if (opponent) {
+                    io.to(opponent).emit("opponentLeft");
+                }
+
+                cleanupRoom(room);
+            }
+        }
+
+        delete players[socket.id];
 
     });
 
 });
 
-server.listen(3000, () => {
-    console.log("Server running on port 3000");
+function createMatch(player1, player2, customRoom = null) {
+
+    const room = customRoom || player1.id + "#" + player2.id;
+
+    player1.join(room);
+    player2.join(room);
+
+    rooms[room] = {
+        startTime: null,
+        gameStarted: false,
+        gameOver: false,
+        clicks: {},
+        players: [player1.id, player2.id],
+        countdownInterval: null,
+        startTimeout: null
+    };
+
+    player1.emit("matchFound", {
+        room,
+        opponentName: players[player2.id]?.username || "Player"
+    });
+
+    player2.emit("matchFound", {
+        room,
+        opponentName: players[player1.id]?.username || "Player"
+    });
+
+    startCountdown(room);
+}
+
+function startCountdown(room) {
+
+    let countdown = 3;
+
+    rooms[room].countdownInterval = setInterval(() => {
+
+        if (!rooms[room]) return;
+
+        io.to(room).emit("countdown", countdown);
+        countdown--;
+
+        if (countdown < 0) {
+
+            clearInterval(rooms[room].countdownInterval);
+
+            rooms[room].startTimeout = setTimeout(() => {
+
+                if (!rooms[room]) return;
+
+                rooms[room].gameStarted = true;
+                rooms[room].startTime = Date.now();
+
+                io.to(room).emit("startGame");
+
+            }, Math.random() * 2000 + 1000);
+        }
+
+    }, 1000);
+}
+
+function cleanupRoom(room) {
+
+    const game = rooms[room];
+
+    if (!game) return;
+
+    if (game.countdownInterval) {
+        clearInterval(game.countdownInterval);
+    }
+
+    if (game.startTimeout) {
+        clearTimeout(game.startTimeout);
+    }
+
+    delete rooms[room];
+
+    console.log("Room cleaned:", room);
+}
+
+function generateRoomCode() {
+    let code = "";
+
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+    for (let i = 0; i < 5; i++) {
+        code += chars[Math.floor(Math.random() * chars.length)];
+    }
+
+    if (privateRooms[code]) {
+        return generateRoomCode();
+    }
+
+    return code;
+}
+
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT, () => {
+    console.log("Server running on port " + PORT);
 });

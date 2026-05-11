@@ -5,7 +5,11 @@
 }
 
 body {
-  background: #0f0f0f;
+  background:
+    radial-gradient(circle at top, #003333, transparent 35%),
+    radial-gradient(circle at bottom, #220044, transparent 35%),
+    #050505;
+
   font-family: Arial, sans-serif;
   color: white;
 
@@ -13,7 +17,23 @@ body {
   justify-content: center;
   align-items: center;
 
-  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+body::before {
+  content: "";
+  position: absolute;
+  width: 200%;
+  height: 200%;
+
+  background:
+    linear-gradient(90deg, rgba(0, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(rgba(0, 255, 255, 0.08) 1px, transparent 1px);
+
+  background-size: 50px 50px;
+
+  animation: moveGrid 18s linear infinite;
 }
 
 .container {
@@ -24,37 +44,75 @@ body {
 
   padding: 40px 20px;
 
-  background: #1a1a1a;
+  background: rgba(20, 20, 20, 0.88);
 
-  border-radius: 20px;
+  border: 1px solid rgba(0, 255, 255, 0.25);
+  border-radius: 24px;
 
   box-shadow:
-    0 0 20px rgba(0, 255, 255, 0.2);
+    0 0 20px rgba(0, 255, 255, 0.25),
+    inset 0 0 20px rgba(0, 255, 255, 0.05);
+
+  position: relative;
+  z-index: 1;
+
+  backdrop-filter: blur(8px);
 }
 
 h1 {
   font-size: 42px;
-
-  margin-bottom: 40px;
+  margin-bottom: 35px;
 
   color: #00ffff;
 
+  letter-spacing: 2px;
+
   text-shadow:
-    0 0 10px #00ffff;
+    0 0 10px #00ffff,
+    0 0 30px #00ffff;
 }
 
 #status {
   font-size: 32px;
 
-  margin-bottom: 40px;
+  margin-bottom: 35px;
 
-  min-height: 80px;
+  min-height: 90px;
 
   display: flex;
   justify-content: center;
   align-items: center;
 
+  white-space: pre-line;
+
   transition: 0.2s;
+}
+
+input {
+  width: 100%;
+
+  padding: 16px;
+
+  margin-bottom: 18px;
+
+  border-radius: 14px;
+
+  border: 1px solid rgba(0, 255, 255, 0.4);
+
+  background: #090909;
+
+  color: white;
+
+  font-size: 20px;
+
+  text-align: center;
+
+  outline: none;
+}
+
+input:focus {
+  box-shadow:
+    0 0 15px rgba(0, 255, 255, 0.5);
 }
 
 button {
@@ -66,7 +124,7 @@ button {
 
   border-radius: 15px;
 
-  font-size: 28px;
+  font-size: 26px;
 
   font-weight: bold;
 
@@ -74,8 +132,11 @@ button {
 
   transition: 0.2s;
 
-  background: #00ffff;
+  background: linear-gradient(135deg, #00ffff, #00ff88);
   color: black;
+
+  box-shadow:
+    0 0 15px rgba(0, 255, 255, 0.4);
 }
 
 button:hover {
@@ -98,8 +159,27 @@ button:disabled {
   font-size: 72px !important;
 }
 
-@keyframes pulse {
+.win {
+  color: #00ff88;
 
+  text-shadow:
+    0 0 20px #00ff88,
+    0 0 40px #00ff88;
+}
+
+.lose {
+  color: #ff4444;
+
+  text-shadow:
+    0 0 20px #ff4444,
+    0 0 40px #ff4444;
+}
+
+.activeBtn {
+  animation: glow 0.8s infinite alternate;
+}
+
+@keyframes pulse {
   0% {
     transform: scale(1);
   }
@@ -111,29 +191,9 @@ button:disabled {
   100% {
     transform: scale(1);
   }
-
-}
-
-.win {
-  color: #00ff88;
-
-  text-shadow:
-    0 0 20px #00ff88;
-}
-
-.lose {
-  color: #ff4444;
-
-  text-shadow:
-    0 0 20px #ff4444;
-}
-
-.activeBtn {
-  animation: glow 0.8s infinite alternate;
 }
 
 @keyframes glow {
-
   from {
     box-shadow:
       0 0 10px #00ffff;
@@ -141,23 +201,39 @@ button:disabled {
 
   to {
     box-shadow:
-      0 0 30px #00ffff;
+      0 0 35px #00ffff,
+      0 0 70px #00ffff;
+  }
+}
+
+@keyframes moveGrid {
+  from {
+    transform: translate(0, 0);
   }
 
+  to {
+    transform: translate(-50px, -50px);
+  }
 }
 
 @media(max-width:500px) {
+  .container {
+    padding: 35px 18px;
+  }
 
   h1 {
     font-size: 34px;
   }
 
   #status {
-    font-size: 26px;
+    font-size: 25px;
   }
 
   button {
-    font-size: 24px;
+    font-size: 23px;
   }
 
+  input {
+    font-size: 18px;
+  }
 }

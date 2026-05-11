@@ -1,13 +1,18 @@
 {
   "name": "tapduel",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Realtime multiplayer reaction game",
+  "main": "backend/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node backend/server.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "multiplayer",
+    "socket.io",
+    "game",
+    "reaction"
+  ],
+  "author": "Aman Jeet",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {

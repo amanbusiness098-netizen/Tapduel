@@ -1,75 +1,191 @@
-const socket = io("http://localhost:3000");
+const socket = io("http://localhost:3000", {
+  autoConnect: false
+});
 
 const statusText = document.getElementById("status");
 const tapBtn = document.getElementById("tapBtn");
+const startBtn = document.getElementById("startBtn");
+const createRoomBtn = document.getElementById("createRoomBtn");
+const joinRoomBtn = document.getElementById("joinRoomBtn");
+const usernameInput = document.getElementById("username");
+const roomInput = document.getElementById("roomInput");
+
+const beepSound = new Audio("sounds/beep.mp3");
+const startSound = new Audio("sounds/start.mp3");
+const winSound = new Audio("sounds/win.mp3");
+const loseSound = new Audio("sounds/lose.mp3");
 
 let currentRoom = null;
 let gameStarted = false;
 let gameEnded = false;
+let username = "";
+let mode = "quick";
+
+tapBtn.style.display = "none";
+
+function hideMenu() {
+  usernameInput.disabled = true;
+  usernameInput.style.display = "none";
+
+  startBtn.style.display = "none";
+  createRoomBtn.style.display = "none";
+  joinRoomBtn.style.display = "none";
+  roomInput.style.display = "none";
+
+  tapBtn.style.display = "inline-block";
+  tapBtn.disabled = true;
+}
+
+function validateUsername() {
+  username = usernameInput.value.trim();
+
+  if (username.length < 2) {
+    alert("Enter at least 2 letters");
+    return false;
+  }
+
+  return true;
+}
+
+startBtn.addEventListener("click", () => {
+  if (!validateUsername()) return;
+
+  mode = "quick";
+
+  hideMenu();
+
+  tapBtn.innerText = "CONNECTING...";
+
+  socket.connect();
+});
+
+createRoomBtn.addEventListener("click", () => {
+  if (!validateUsername()) return;
+
+  mode = "create";
+
+  hideMenu();
+
+  tapBtn.innerText = "CREATING ROOM...";
+
+  socket.connect();
+});
+
+joinRoomBtn.addEventListener("click", () => {
+  if (!validateUsername()) return;
+
+  const roomCode = roomInput.value.trim().toUpperCase();
+
+  if (roomCode.length < 4) {
+    alert("Invalid room code");
+    return;
+  }
+
+  mode = "join";
+
+  hideMenu();
+
+  tapBtn.innerText = "JOINING ROOM...";
+
+  socket.connect();
+
+  socket.once("connect", () => {
+    socket.emit("joinPrivateRoom", {
+      username,
+      roomCode
+    });
+  });
+});
 
 socket.on("connect", () => {
   console.log("Connected:", socket.id);
+
+  if (mode === "quick") {
+    socket.emit("joinGame", username);
+  }
+
+  if (mode === "create") {
+    socket.emit("createPrivateRoom", username);
+  }
 });
 
 socket.on("waiting", () => {
-
   statusText.innerText = "Waiting for opponent...";
-
   tapBtn.innerText = "WAITING";
   tapBtn.disabled = true;
-
 });
 
-socket.on("matchFound", (room) => {
+socket.on("privateRoomCreated", (data) => {
+  currentRoom = data.roomCode;
 
-  currentRoom = room;
+  statusText.innerText = "Room Code:\n" + data.roomCode;
+  tapBtn.innerText = "WAITING FOR FRIEND";
+  tapBtn.disabled = true;
+});
 
+socket.on("privateRoomError", (message) => {
+  alert(message);
+  location.reload();
+});
+
+socket.on("matchFound", (data) => {
+  currentRoom = data.room;
   gameStarted = false;
   gameEnded = false;
 
-  statusText.innerText = "Match Found!";
+  statusText.innerText = "Match Found vs " + data.opponentName;
 
   tapBtn.innerText = "WAIT...";
   tapBtn.disabled = true;
-
 });
 
 socket.on("countdown", (num) => {
+  beepSound.play();
 
   statusText.innerText = num;
-
   statusText.classList.add("countdown");
-
 });
 
 socket.on("startGame", () => {
+  startSound.play();
 
   statusText.classList.remove("countdown");
 
-  gameStarted = true;
+  statusText.innerText = "GO!";
+  statusText.style.color = "#00ff99";
+  statusText.style.transform = "scale(1.5)";
 
-  statusText.innerText = "TAP NOW!";
+  setTimeout(() => {
+    gameStarted = true;
 
-  tapBtn.innerText = "TAP";
-  tapBtn.disabled = false;
+    if (navigator.vibrate) {
+      navigator.vibrate(120);
+    }
 
-  tapBtn.classList.add("activeBtn");
+    statusText.innerText = "TAP NOW!";
+    statusText.style.transform = "scale(1)";
 
+    tapBtn.innerText = "TAP";
+    tapBtn.disabled = false;
+    tapBtn.classList.add("activeBtn");
+  }, 400);
 });
 
 tapBtn.addEventListener("click", () => {
+  if (gameEnded) {
+    location.reload();
+    return;
+  }
 
-  if (!gameStarted || gameEnded) return;
+  if (!gameStarted) return;
 
   socket.emit("tap", currentRoom);
-
   tapBtn.disabled = true;
-
 });
 
 socket.on("result", (data) => {
-
   gameEnded = true;
+  gameStarted = false;
 
   tapBtn.classList.remove("activeBtn");
 
@@ -77,28 +193,46 @@ socket.on("result", (data) => {
   statusText.classList.remove("lose");
 
   if (data.winner === socket.id) {
+    winSound.play();
 
-    statusText.innerText = "YOU WIN!";
+    if (navigator.vibrate) {
+      navigator.vibrate([120, 50, 120]);
+    }
+
+    statusText.innerText =
+      "YOU WIN!\n" +
+      data.t1 + "ms vs " + data.t2 + "ms";
+
     statusText.classList.add("win");
-
   } else {
+    loseSound.play();
 
-    statusText.innerText = "YOU LOSE!";
+    if (navigator.vibrate) {
+      navigator.vibrate(300);
+    }
+
+    statusText.innerText =
+      "YOU LOSE!\n" +
+      data.t1 + "ms vs " + data.t2 + "ms";
+
     statusText.classList.add("lose");
-
   }
 
   tapBtn.innerText = "REFRESH";
   tapBtn.disabled = false;
-
 });
 
-tapBtn.addEventListener("click", () => {
+socket.on("opponentLeft", () => {
+  gameEnded = true;
+  gameStarted = false;
 
-  if (gameEnded) {
+  statusText.classList.remove("countdown");
+  statusText.classList.remove("win");
+  statusText.classList.add("lose");
 
-    location.reload();
+  statusText.innerText = "Opponent Left";
 
-  }
-
+  tapBtn.classList.remove("activeBtn");
+  tapBtn.innerText = "REFRESH";
+  tapBtn.disabled = false;
 });
