@@ -1,7 +1,16 @@
+const admin = require("firebase-admin");
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
+
+const serviceAccount = require("./firebase-key.json");
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
+
+const db = admin.firestore();
 
 const app = express();
 app.use(cors());
@@ -24,7 +33,6 @@ io.on("connection", (socket) => {
 
     console.log("User connected:", socket.id);
 
-    // QUICK MATCH
     socket.on("joinGame", (username) => {
 
         players[socket.id] = {
@@ -32,24 +40,19 @@ io.on("connection", (socket) => {
         };
 
         if (waitingPlayer && waitingPlayer.connected && waitingPlayer.id !== socket.id) {
-
             const player1 = waitingPlayer;
             const player2 = socket;
 
             createMatch(player1, player2);
 
             waitingPlayer = null;
-
         } else {
-
             waitingPlayer = socket;
             socket.emit("waiting");
-
         }
 
     });
 
-    // CREATE PRIVATE ROOM
     socket.on("createPrivateRoom", (username) => {
 
         players[socket.id] = {
@@ -73,7 +76,6 @@ io.on("connection", (socket) => {
 
     });
 
-    // JOIN PRIVATE ROOM
     socket.on("joinPrivateRoom", (data) => {
 
         const username = data.username || "Player";
@@ -113,8 +115,7 @@ io.on("connection", (socket) => {
 
     });
 
-    // PLAYER TAP
-    socket.on("tap", (room) => {
+    socket.on("tap", async (room) => {
 
         const game = rooms[room];
 
@@ -156,20 +157,38 @@ io.on("connection", (socket) => {
             const t2 = game.clicks[p2];
 
             const winner = t1 <= t2 ? p1 : p2;
+            const loser = winner === p1 ? p2 : p1;
+
+            const winnerName = players[winner]?.username || "Player";
+            const loserName = players[loser]?.username || "Player";
 
             io.to(room).emit("result", {
                 winner,
                 t1,
                 t2,
-                winnerName: players[winner]?.username || "Player"
+                winnerName
             });
+
+            try {
+                await db.collection("leaderboard").add({
+                    winnerName,
+                    loserName,
+                    winnerReaction: game.clicks[winner],
+                    loserReaction: game.clicks[loser],
+                    room,
+                    createdAt: admin.firestore.FieldValue.serverTimestamp()
+                });
+
+                console.log("Leaderboard saved:", winnerName);
+            } catch (error) {
+                console.error("Failed to save leaderboard:", error);
+            }
 
             cleanupRoom(room);
         }
 
     });
 
-    // DISCONNECT
     socket.on("disconnect", () => {
 
         console.log("Disconnected:", socket.id);
