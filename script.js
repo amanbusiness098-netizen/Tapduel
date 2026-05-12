@@ -1,8 +1,10 @@
+const leaderboardList = document.getElementById("leaderboardList");
 let reactionInterval;
 let reactionStart;
 const socket = io("https://tapduel.onrender.com", {
   autoConnect: false
 });
+
 
 const youName = document.getElementById("youName");
 const enemyName = document.getElementById("enemyName");
@@ -194,7 +196,12 @@ tapBtn.addEventListener("click", () => {
 
   if (!gameStarted) return;
   clearInterval(reactionInterval);
-  socket.emit("tap", currentRoom);
+  const clientReaction = Date.now() - reactionStart;
+
+  socket.emit("tap", {
+    room: currentRoom,
+    clientReaction
+  });
   tapBtn.disabled = true;
 });
 

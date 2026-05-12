@@ -40,6 +40,13 @@
         JOIN ROOM
       </button>
     </div>
+    <div id="leaderboard">
+      <h3>TOP REACTIONS</h3>
+
+      <div id="leaderboardList">
+        Loading...
+      </div>
+    </div>
 
     <button id="tapBtn" disabled>
       WAITING
@@ -47,6 +54,68 @@
   </div>
 
   <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+  <script type="module">
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+    import {
+      getFirestore,
+      collection,
+      query,
+      orderBy,
+      limit,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCBQakzaEiRpJkxIMgsiLPfT3SiZ6p5o-A",
+      authDomain: "tapduel-4670c.firebaseapp.com",
+      projectId: "tapduel-4670c",
+      storageBucket: "tapduel-4670c.firebasestorage.app",
+      messagingSenderId: "1947914048068",
+      appId: "1:947914048068:web:21786db89407f23d377211"
+    };
+    const app = initializeApp(firebaseConfig);
+
+    const db = getFirestore(app);
+
+    async function loadLeaderboard() {
+
+      const q = query(
+        collection(db, "leaderboard"),
+        orderBy("winnerReaction"),
+        limit(10)
+      );
+
+      const snapshot = await getDocs(q);
+
+      const leaderboardList =
+        document.getElementById("leaderboardList");
+
+      leaderboardList.innerHTML = "";
+
+      snapshot.forEach((doc, index) => {
+
+        const data = doc.data();
+
+        leaderboardList.innerHTML += `
+        <div class="leaderboardItem">
+          <span>
+            #${index + 1} ${data.winnerName}
+          </span>
+
+          <span>
+            ${data.winnerReaction} ms
+          </span>
+        </div>
+      `;
+      });
+
+    }
+
+    loadLeaderboard();
+
+  </script>
   <script src="script.js"></script>
 
 </body>
