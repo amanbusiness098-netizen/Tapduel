@@ -115,7 +115,10 @@ io.on("connection", (socket) => {
 
     });
 
-    socket.on("tap", async (room) => {
+    socket.on("tap", async (data) => {
+        const room = typeof data === "string" ? data : data.room;
+        const clientReaction = data.clientReaction || null;
+
 
         const game = rooms[room];
 
@@ -143,7 +146,10 @@ io.on("connection", (socket) => {
         }
 
         const reactionTime = Date.now() - game.startTime;
-        game.clicks[socket.id] = reactionTime;
+        game.clicks[socket.id] = {
+            serverReaction: reactionTime,
+            clientReaction
+        };
 
         console.log(socket.id, reactionTime);
 
@@ -153,9 +159,11 @@ io.on("connection", (socket) => {
 
             const [p1, p2] = game.players;
 
-            const t1 = game.clicks[p1];
-            const t2 = game.clicks[p2];
+            const t1 = game.clicks[p1].clientReaction || game.clicks[p1].serverReaction;
+            const t2 = game.clicks[p2].clientReaction || game.clicks[p2].serverReaction;
 
+            const serverT1 = game.clicks[p1].serverReaction;
+            const serverT2 = game.clicks[p2].serverReaction;
             const winner = t1 <= t2 ? p1 : p2;
             const loser = winner === p1 ? p2 : p1;
 
@@ -173,8 +181,11 @@ io.on("connection", (socket) => {
                 await db.collection("leaderboard").add({
                     winnerName,
                     loserName,
-                    winnerReaction: game.clicks[winner],
-                    loserReaction: game.clicks[loser],
+                    winnerReaction: game.clicks[winner].clientReaction || game.clicks[winner].serverReaction,
+                    loserReaction: game.clicks[loser].clientReaction || game.clicks[loser].serverReaction,
+
+                    winnerServerReaction: game.clicks[winner].serverReaction,
+                    loserServerReaction: game.clicks[loser].serverReaction,
                     room,
                     createdAt: admin.firestore.FieldValue.serverTimestamp()
                 });
