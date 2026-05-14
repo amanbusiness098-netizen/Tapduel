@@ -1,6 +1,10 @@
+const leaderboard = document.getElementById("leaderboard");
+const playerStats = document.getElementById("playerStats");
+let leaderboardRefreshTimeout;
 const leaderboardList = document.getElementById("leaderboardList");
 let reactionInterval;
 let reactionStart;
+let waitingAnimation;
 const socket = io("https://tapduel.onrender.com", {
   autoConnect: false
 });
@@ -40,10 +44,16 @@ function hideMenu() {
 
   tapBtn.style.display = "inline-block";
   tapBtn.disabled = true;
+  leaderboard.style.display = "none";
+
+  if (playerStats) {
+    playerStats.style.display = "none";
+  }
 }
 
 function validateUsername() {
   username = usernameInput.value.trim();
+  localStorage.setItem("tapduel_username", username);
 
   if (username.length < 2) {
     alert("Enter at least 2 letters");
@@ -116,9 +126,23 @@ socket.on("connect", () => {
 });
 
 socket.on("waiting", () => {
-  statusText.innerText = "Waiting for opponent...";
+
   tapBtn.innerText = "WAITING";
   tapBtn.disabled = true;
+
+  let dots = 0;
+
+  clearInterval(waitingAnimation);
+
+  waitingAnimation = setInterval(() => {
+
+    dots = (dots + 1) % 4;
+
+    statusText.innerText =
+      "Waiting" + ".".repeat(dots);
+
+  }, 500);
+
 });
 
 socket.on("privateRoomCreated", (data) => {
@@ -135,6 +159,7 @@ socket.on("privateRoomError", (message) => {
 });
 
 socket.on("matchFound", (data) => {
+  clearInterval(waitingAnimation);
   currentRoom = data.room;
   gameStarted = false;
   gameEnded = false;
@@ -243,6 +268,15 @@ socket.on("result", (data) => {
 
   tapBtn.innerText = "REFRESH";
   tapBtn.disabled = false;
+  leaderboard.style.display = "block";
+
+  if (playerStats) {
+    playerStats.style.display = "block";
+  }
+
+  leaderboardRefreshTimeout = setTimeout(() => {
+    location.reload();
+  }, 4000);
 });
 
 socket.on("opponentLeft", () => {

@@ -5,57 +5,68 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TapDuel</title>
-
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-
   <div class="container">
     <h1>TapDuel</h1>
 
     <h2 id="status">Enter your name</h2>
+
     <div id="playerInfo">
       <span id="youName"></span>
-      <span>VS</span>
+      <span id="vsText">VS</span>
       <span id="enemyName"></span>
     </div>
 
     <input type="text" id="username" placeholder="Enter username" maxlength="12">
 
     <div class="menuButtons">
-      <button id="startBtn">
-        QUICK MATCH
-      </button>
-
-      <button id="createRoomBtn">
-        CREATE ROOM
-      </button>
+      <button id="startBtn">QUICK MATCH</button>
+      <button id="createRoomBtn">CREATE ROOM</button>
     </div>
 
     <div id="roomSection">
       <input type="text" id="roomInput" placeholder="Enter Room Code" maxlength="6">
+      <button id="joinRoomBtn">JOIN ROOM</button>
+    </div>
 
-      <button id="joinRoomBtn">
-        JOIN ROOM
-      </button>
+    <button id="tapBtn" disabled>WAITING</button>
+    <div id="playerStats">
+
+      <h3>PLAYER STATS</h3>
+
+      <div class="statsRow">
+        <span>Wins</span>
+        <span id="winsStat">0</span>
+      </div>
+
+      <div class="statsRow">
+        <span>Losses</span>
+        <span id="lossesStat">0</span>
+      </div>
+
+      <div class="statsRow">
+        <span>Games</span>
+        <span id="gamesStat">0</span>
+      </div>
+
+      <div class="statsRow">
+        <span>Fastest</span>
+        <span id="fastestStat">0 ms</span>
+      </div>
+
     </div>
     <div id="leaderboard">
       <h3>TOP REACTIONS</h3>
-
-      <div id="leaderboardList">
-        Loading...
-      </div>
+      <div id="leaderboardList">Loading...</div>
     </div>
-
-    <button id="tapBtn" disabled>
-      WAITING
-    </button>
   </div>
 
   <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
-  <script type="module">
 
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
     import {
@@ -64,7 +75,9 @@
       query,
       orderBy,
       limit,
-      getDocs
+      getDocs,
+      doc,
+      getDoc
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -75,12 +88,11 @@
       messagingSenderId: "1947914048068",
       appId: "1:947914048068:web:21786db89407f23d377211"
     };
-    const app = initializeApp(firebaseConfig);
 
+    const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
     async function loadLeaderboard() {
-
       const q = query(
         collection(db, "leaderboard"),
         orderBy("winnerReaction"),
@@ -88,9 +100,7 @@
       );
 
       const snapshot = await getDocs(q);
-
-      const leaderboardList =
-        document.getElementById("leaderboardList");
+      const leaderboardList = document.getElementById("leaderboardList");
 
       leaderboardList.innerHTML = "";
 
@@ -98,26 +108,58 @@
 
         const data = doc.data();
 
+        let medal = "";
+
+        if (index === 0) medal = "🥇";
+        else if (index === 1) medal = "🥈";
+        else if (index === 2) medal = "🥉";
+
         leaderboardList.innerHTML += `
-        <div class="leaderboardItem">
-          <span>
-            #${index + 1} ${data.winnerName}
-          </span>
+    <div class="leaderboardItem">
+      <span>${medal} #${index + 1} ${data.winnerName}</span>
+      <span>${data.winnerReaction} ms</span>
+    </div>
+  `;
 
-          <span>
-            ${data.winnerReaction} ms
-          </span>
-        </div>
-      `;
       });
-
     }
 
     loadLeaderboard();
+    async function loadPlayerStats() {
 
+      const savedName = localStorage.getItem("tapduel_username");
+
+      if (!savedName) return;
+
+      const playerId = savedName
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "_");
+
+      const playerRef = doc(db, "players", playerId);
+
+      const snapshot = await getDoc(playerRef);
+
+      if (!snapshot.exists()) return;
+
+      const data = snapshot.data();
+
+      document.getElementById("winsStat").innerText =
+        data.wins || 0;
+
+      document.getElementById("lossesStat").innerText =
+        data.losses || 0;
+
+      document.getElementById("gamesStat").innerText =
+        data.gamesPlayed || 0;
+
+      document.getElementById("fastestStat").innerText =
+        (data.fastestReaction || 0) + " ms";
+    }
+
+    loadPlayerStats();
   </script>
-  <script src="script.js"></script>
 
+  <script src="script.js"></script>
 </body>
 
 </html>
