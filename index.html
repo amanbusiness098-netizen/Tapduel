@@ -94,32 +94,35 @@
     const db = getFirestore(app);
 
     async function loadLeaderboard() {
-      const q = query(
-        collection(db, "leaderboard"),
-        orderBy("winnerReaction"),
-        limit(10)
-      );
+  const q = query(
+    collection(db, "leaderboard"),
+    orderBy("winnerReaction"),
+    limit(10)
+  );
 
-      const snapshot = await getDocs(q);
-      const leaderboardList = document.getElementById("leaderboardList");
+  const snapshot = await getDocs(q);
+  const leaderboardList = document.getElementById("leaderboardList");
 
-      leaderboardList.innerHTML = "";
+  leaderboardList.innerHTML = "";
 
-      snapshot.forEach((doc, index) => {
+  snapshot.forEach((doc, index) => {
+    const data = doc.data();
 
-        const data = doc.data();
+    let rank = "#" + (index + 1);
 
-        
+    if (index === 0) rank = "🥇";
+    if (index === 1) rank = "🥈";
+    if (index === 2) rank = "🥉";
 
-        leaderboardList.innerHTML += `
-    <div class="leaderboardItem">
-      <span>${medal} ${data.winnerName}</span>
-      <span>${data.winnerReaction} ms</span>
-    </div>
-  `;
+    leaderboardList.innerHTML += `
+      <div class="leaderboardItem">
+        <span>${rank} ${data.winnerName}</span>
+        <span>${data.winnerReaction} ms</span>
+      </div>
+    `;
+  });
+}
 
-      });
-    }
 
     loadLeaderboard();
     async function loadPlayerStats() {
