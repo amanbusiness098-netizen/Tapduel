@@ -105,14 +105,16 @@
 
       leaderboardList.innerHTML = "";
 
-      snapshot.forEach((doc, index) => {
-        let medal = "";
+      let medal = "";
 
-        if (index === 0) medal = "🥇";
-        else if (index === 1) medal = "🥈";
-        else if (index === 2) medal = "🥉";
+      if (index === 0) medal = "🥇";
+      else if (index === 1) medal = "🥈";
+      else if (index === 2) medal = "🥉";
+      snapshot.forEach((doc, index) => {
 
         const data = doc.data();
+
+        let medal = "";
 
         if (index === 0) medal = "🥇";
         else if (index === 1) medal = "🥈";
@@ -120,7 +122,7 @@
 
         leaderboardList.innerHTML += `
     <div class="leaderboardItem">
-      <span>${medal} ${medal || "#" + (index + 1)} ${data.winnerName}</span>
+      <span>${medal} ${data.winnerName}</span>
       <span>${data.winnerReaction} ms</span>
     </div>
   `;
