@@ -105,20 +105,11 @@
 
       leaderboardList.innerHTML = "";
 
-      let medal = "";
-
-      if (index === 0) medal = "🥇";
-      else if (index === 1) medal = "🥈";
-      else if (index === 2) medal = "🥉";
       snapshot.forEach((doc, index) => {
 
         const data = doc.data();
 
-        let medal = "";
-
-        if (index === 0) medal = "🥇";
-        else if (index === 1) medal = "🥈";
-        else if (index === 2) medal = "🥉";
+        
 
         leaderboardList.innerHTML += `
     <div class="leaderboardItem">
