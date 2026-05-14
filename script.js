@@ -29,6 +29,11 @@ let currentRoom = null;
 let gameStarted = false;
 let gameEnded = false;
 let username = "";
+const savedUsername = localStorage.getItem("tapduel_username");
+
+if (savedUsername) {
+  usernameInput.value = savedUsername;
+}
 let mode = "quick";
 
 tapBtn.style.display = "none";
