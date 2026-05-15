@@ -51,6 +51,11 @@
         <span>Wins</span>
         <span id="winsStat">0</span>
       </div>
+      
+      <div class="statsRow">
+        <span>Rank</span>
+        <span id="rankStat">Rookie</span>
+      </div>
 
       <div class="statsRow">
         <span>Losses</span>
@@ -152,6 +157,8 @@
       if (!snapshot.exists()) return;
 
       const data = snapshot.data();
+      document.getElementById("rankStat").innerText =
+        data.rank || "Rookie";
 
       document.getElementById("winsStat").innerText =
         data.wins || 0;
