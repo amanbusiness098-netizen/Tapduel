@@ -33,6 +33,9 @@
     </div>
 
     <button id="tapBtn" disabled>WAITING</button>
+    <button id="shareBtn" style="display:none;">
+      SHARE RESULT
+    </button>
     <div id="playerStats">
 
       <h3>PLAYER STATS</h3>
@@ -94,34 +97,34 @@
     const db = getFirestore(app);
 
     async function loadLeaderboard() {
-  const q = query(
-    collection(db, "leaderboard"),
-    orderBy("winnerReaction"),
-    limit(10)
-  );
+      const q = query(
+        collection(db, "leaderboard"),
+        orderBy("winnerReaction"),
+        limit(10)
+      );
 
-  const snapshot = await getDocs(q);
-  const leaderboardList = document.getElementById("leaderboardList");
+      const snapshot = await getDocs(q);
+      const leaderboardList = document.getElementById("leaderboardList");
 
-  leaderboardList.innerHTML = "";
+      leaderboardList.innerHTML = "";
 
-  snapshot.forEach((doc, index) => {
-    const data = doc.data();
+      snapshot.forEach((doc, index) => {
+        const data = doc.data();
 
-    let rank = "#" + (index + 1);
+        let rank = "#" + (index + 1);
 
-    if (index === 0) rank = "🥇";
-    if (index === 1) rank = "🥈";
-    if (index === 2) rank = "🥉";
+        if (index === 0) rank = "🥇";
+        if (index === 1) rank = "🥈";
+        if (index === 2) rank = "🥉";
 
-    leaderboardList.innerHTML += `
+        leaderboardList.innerHTML += `
       <div class="leaderboardItem">
         <span>${rank} ${data.winnerName}</span>
         <span>${data.winnerReaction} ms</span>
       </div>
     `;
-  });
-}
+      });
+    }
 
 
     loadLeaderboard();

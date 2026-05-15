@@ -10,6 +10,8 @@ const socket = io("https://tapduel.onrender.com", {
 });
 
 
+const shareBtn = document.getElementById("shareBtn");
+let lastResultText = "";
 const youName = document.getElementById("youName");
 const enemyName = document.getElementById("enemyName");
 const statusText = document.getElementById("status");
@@ -270,6 +272,10 @@ socket.on("result", (data) => {
 
     statusText.classList.add("lose");
   }
+  lastResultText =
+    statusText.innerText + "\nPlay TapDuel: https://tapduel.netlify.app";
+
+  shareBtn.style.display = "inline-block";
 
   tapBtn.innerText = "REFRESH";
   tapBtn.disabled = false;
@@ -297,4 +303,16 @@ socket.on("opponentLeft", () => {
   tapBtn.classList.remove("activeBtn");
   tapBtn.innerText = "REFRESH";
   tapBtn.disabled = false;
+});
+shareBtn.addEventListener("click", async () => {
+  if (navigator.share) {
+    await navigator.share({
+      title: "TapDuel Result",
+      text: lastResultText,
+      url: "https://tapduel.netlify.app"
+    });
+  } else {
+    navigator.clipboard.writeText(lastResultText);
+    alert("Result copied!");
+  }
 });
