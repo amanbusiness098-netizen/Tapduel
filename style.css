@@ -403,3 +403,16 @@ button,
   margin-top: 12px;
   background: linear-gradient(135deg, #ffcc00, #00ffff);
 }
+#winsLeaderboard {
+  margin-top: 25px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+#winsLeaderboard h3 {
+  margin-bottom: 12px;
+  color: #00ffff;
+  text-shadow: 0 0 10px #00ffff;
+}

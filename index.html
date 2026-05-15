@@ -51,7 +51,7 @@
         <span>Wins</span>
         <span id="winsStat">0</span>
       </div>
-      
+
       <div class="statsRow">
         <span>Rank</span>
         <span id="rankStat">Rookie</span>
@@ -76,6 +76,11 @@
     <div id="leaderboard">
       <h3>TOP REACTIONS</h3>
       <div id="leaderboardList">Loading...</div>
+    </div>
+
+    <div id="winsLeaderboard">
+      <h3>TOP PLAYERS</h3>
+      <div id="winsLeaderboardList">Loading...</div>
     </div>
 
   </div>
@@ -140,6 +145,7 @@
 
 
     loadLeaderboard();
+    loadWinsLeaderboard();
     async function loadPlayerStats() {
 
       const savedName = localStorage.getItem("tapduel_username");
@@ -173,7 +179,6 @@
         (data.fastestReaction || 0) + " ms";
     }
 
-    loadPlayerStats();
   </script>
 
   <script src="script.js"></script>
