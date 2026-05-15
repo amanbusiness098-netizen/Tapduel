@@ -462,6 +462,8 @@ async function updatePlayerStats(
           wins: didWin ? 1 : 0,
           losses: didWin ? 0 : 1,
           gamesPlayed: 1,
+          xp: didWin ? 25 : 10,
+          level: 1,
           rank: getRank(didWin ? 1 : 0),
           fastestReaction: reaction,
           lastReaction: reaction,
@@ -483,6 +485,13 @@ async function updatePlayerStats(
         (data.wins || 0) + (didWin ? 1 : 0);
 
       const newRank = getRank(newWins);
+      const gainedXp = didWin ? 25 : 10;
+
+      const newXp =
+        (data.xp || 0) + gainedXp;
+
+      const newLevel =
+        Math.floor(newXp / 100) + 1;
 
       transaction.update(ref, {
 
@@ -503,6 +512,8 @@ async function updatePlayerStats(
         rank: newRank,
         fastestReaction: newFastest,
 
+        xp: newXp,
+        level: newLevel,
 
         lastReaction: reaction,
 

@@ -51,7 +51,15 @@
         <span>Wins</span>
         <span id="winsStat">0</span>
       </div>
+      <div class="statsRow">
+        <span>Level</span>
+        <span id="levelStat">1</span>
+      </div>
 
+      <div class="statsRow">
+        <span>XP</span>
+        <span id="xpStat">0</span>
+      </div>
       <div class="statsRow">
         <span>Rank</span>
         <span id="rankStat">Rookie</span>
@@ -125,19 +133,16 @@
 
       leaderboardList.innerHTML = "";
 
-      snapshot.forEach((doc, index) => {
-        const data = doc.data();
+      snapshot.forEach((docSnap, index) => {
+        const data = docSnap.data();
 
-        let rank = "#" + (index + 1);
-
-        if (index === 0) rank = "🥇";
-        if (index === 1) rank = "🥈";
-        if (index === 2) rank = "🥉";
+        const ranks = ["🥇", "🥈", "🥉"];
+        const rank = ranks[index] || `#${index + 1}`;
 
         leaderboardList.innerHTML += `
       <div class="leaderboardItem">
-        <span>${rank} ${data.winnerName}</span>
-        <span>${data.winnerReaction} ms</span>
+        <span>${rank} ${data.winnerName || "Player"}</span>
+        <span>${data.winnerReaction || 0} ms</span>
       </div>
     `;
       });
@@ -166,6 +171,12 @@
       document.getElementById("rankStat").innerText =
         data.rank || "Rookie";
 
+      document.getElementById("levelStat").innerText =
+        data.level || 1;
+
+      document.getElementById("xpStat").innerText =
+        data.xp || 0;
+
       document.getElementById("winsStat").innerText =
         data.wins || 0;
 
@@ -177,8 +188,34 @@
 
       document.getElementById("fastestStat").innerText =
         (data.fastestReaction || 0) + " ms";
+
+    }
+    async function loadWinsLeaderboard() {
+      const q = query(
+        collection(db, "players"),
+        orderBy("wins", "desc"),
+        limit(10)
+      );
+
+      const snapshot = await getDocs(q);
+      const list = document.getElementById("winsLeaderboardList");
+
+      list.innerHTML = "";
+
+      snapshot.forEach((docSnap, index) => {
+        const data = docSnap.data();
+
+        list.innerHTML += `
+      <div class="leaderboardItem">
+        <span>#${index + 1} ${data.username || "Player"}</span>
+        <span>${data.wins || 0} wins</span>
+      </div>
+    `;
+      });
     }
 
+    loadPlayerStats();
+    loadWinsLeaderboard();
   </script>
 
   <script src="script.js"></script>
