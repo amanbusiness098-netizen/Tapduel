@@ -1,3 +1,5 @@
+const onlineCount = document.getElementById("onlineCount");
+const totalMatches = document.getElementById("totalMatches");
 const leaderboard = document.getElementById("leaderboard");
 const playerStats = document.getElementById("playerStats");
 let leaderboardRefreshTimeout;
@@ -316,3 +318,24 @@ shareBtn.addEventListener("click", async () => {
     alert("Result copied!");
   }
 });
+
+socket.on("onlinePlayers", (count) => {
+  onlineCount.innerText = count + " online";
+});
+
+async function loadGlobalStats() {
+  try {
+    const res = await fetch("https://tapduel.onrender.com/stats");
+    const data = await res.json();
+
+    totalMatches.innerText = (data.totalMatches || 0) + " matches";
+
+    if (data.onlinePlayers !== undefined) {
+      onlineCount.innerText = data.onlinePlayers + " online";
+    }
+  } catch (error) {
+    console.log("Stats load failed");
+  }
+}
+
+loadGlobalStats();

@@ -380,3 +380,21 @@ button,
   margin-top: 12px;
   background: linear-gradient(135deg, #00ffff, #00ff88);
 }
+
+#liveStats {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: -20px;
+  margin-bottom: 25px;
+  font-size: 14px;
+  color: #00ffff;
+  opacity: 0.9;
+}
+
+#liveStats span {
+  padding: 6px 10px;
+  border: 1px solid rgba(0, 255, 255, 0.25);
+  border-radius: 999px;
+  background: rgba(0, 255, 255, 0.06);
+}
