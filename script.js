@@ -287,7 +287,7 @@ socket.on("result", (data) => {
 
   leaderboardRefreshTimeout = setTimeout(() => {
     location.reload();
-  }, 4000);
+  }, 10000);
 });
 
 socket.on("opponentLeft", () => {
