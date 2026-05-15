@@ -462,6 +462,7 @@ async function updatePlayerStats(
           wins: didWin ? 1 : 0,
           losses: didWin ? 0 : 1,
           gamesPlayed: 1,
+          rank: getRank(didWin ? 1 : 0),
           fastestReaction: reaction,
           lastReaction: reaction,
           lastPlayed:
@@ -478,6 +479,10 @@ async function updatePlayerStats(
 
       const newFastest =
         Math.min(currentFastest, reaction);
+      const newWins =
+        (data.wins || 0) + (didWin ? 1 : 0);
+
+      const newRank = getRank(newWins);
 
       transaction.update(ref, {
 
@@ -495,8 +500,9 @@ async function updatePlayerStats(
 
         gamesPlayed:
           admin.firestore.FieldValue.increment(1),
-
+        rank: newRank,
         fastestReaction: newFastest,
+
 
         lastReaction: reaction,
 
@@ -554,6 +560,13 @@ function cleanName(name) {
   return String(name)
     .trim()
     .slice(0, 12) || "Player";
+}
+function getRank(wins) {
+  if (wins >= 50) return "Elite";
+  if (wins >= 30) return "Gold";
+  if (wins >= 15) return "Silver";
+  if (wins >= 5) return "Bronze";
+  return "Rookie";
 }
 
 const PORT =

@@ -1,3 +1,4 @@
+const copyRoomBtn = document.getElementById("copyRoomBtn");
 const onlineCount = document.getElementById("onlineCount");
 const totalMatches = document.getElementById("totalMatches");
 const leaderboard = document.getElementById("leaderboard");
@@ -160,6 +161,7 @@ socket.on("privateRoomCreated", (data) => {
   statusText.innerText = "Room Code:\n" + data.roomCode;
   tapBtn.innerText = "WAITING FOR FRIEND";
   tapBtn.disabled = true;
+  copyRoomBtn.style.display = "inline-block";
 });
 
 socket.on("privateRoomError", (message) => {
@@ -245,7 +247,6 @@ socket.on("result", (data) => {
   gameStarted = false;
 
   tapBtn.classList.remove("activeBtn");
-
   statusText.classList.remove("win");
   statusText.classList.remove("lose");
 
@@ -257,8 +258,7 @@ socket.on("result", (data) => {
     }
 
     statusText.innerText =
-      "YOU WIN!\n" +
-      data.t1 + "ms vs " + data.t2 + "ms";
+      "YOU WIN!\n" + data.t1 + "ms vs " + data.t2 + "ms";
 
     statusText.classList.add("win");
   } else {
@@ -269,27 +269,24 @@ socket.on("result", (data) => {
     }
 
     statusText.innerText =
-      "YOU LOSE!\n" +
-      data.t1 + "ms vs " + data.t2 + "ms";
+      "YOU LOSE!\n" + data.t1 + "ms vs " + data.t2 + "ms";
 
     statusText.classList.add("lose");
   }
+
   lastResultText =
     statusText.innerText + "\nPlay TapDuel: https://tapduel.netlify.app";
 
   shareBtn.style.display = "inline-block";
 
-  tapBtn.innerText = "REFRESH";
+  tapBtn.innerText = "PLAY AGAIN";
   tapBtn.disabled = false;
+
   leaderboard.style.display = "block";
 
   if (playerStats) {
     playerStats.style.display = "block";
   }
-
-  leaderboardRefreshTimeout = setTimeout(() => {
-    location.reload();
-  }, 10000);
 });
 
 socket.on("opponentLeft", () => {
@@ -303,7 +300,7 @@ socket.on("opponentLeft", () => {
   statusText.innerText = "Opponent Left";
 
   tapBtn.classList.remove("activeBtn");
-  tapBtn.innerText = "REFRESH";
+  tapBtn.innerText = "PLAY AGAIN";
   tapBtn.disabled = false;
 });
 shareBtn.addEventListener("click", async () => {
@@ -339,3 +336,12 @@ async function loadGlobalStats() {
 }
 
 loadGlobalStats();
+copyRoomBtn.addEventListener("click", () => {
+  const inviteText =
+    "Join my TapDuel room: " +
+    currentRoom +
+    "\nhttps://tapduel.netlify.app";
+
+  navigator.clipboard.writeText(inviteText);
+  alert("Room link copied!");
+});

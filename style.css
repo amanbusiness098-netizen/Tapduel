@@ -398,3 +398,8 @@ button,
   border-radius: 999px;
   background: rgba(0, 255, 255, 0.06);
 }
+
+#copyRoomBtn {
+  margin-top: 12px;
+  background: linear-gradient(135deg, #ffcc00, #00ffff);
+}
