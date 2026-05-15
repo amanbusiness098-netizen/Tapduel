@@ -25,30 +25,66 @@ const io = new Server(server, {
   }
 });
 
+let onlinePlayers = 0;
 let waitingPlayer = null;
 
 const rooms = {};
 const players = {};
 const privateRooms = {};
 
+app.get("/stats", async (req, res) => {
+  try {
+    const analyticsDoc =
+      await db.collection("analytics").doc("global").get();
+
+    const analytics = analyticsDoc.data() || {};
+
+    res.json({
+      onlinePlayers,
+      totalMatches: analytics.totalMatches || 0
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to load stats"
+    });
+  }
+});
+
 io.on("connection", (socket) => {
+
+  onlinePlayers++;
+
+  io.emit("onlinePlayers", onlinePlayers);
+
   console.log("User connected:", socket.id);
 
   socket.on("joinGame", (username) => {
+
     players[socket.id] = {
       username: cleanName(username)
     };
 
-    if (waitingPlayer && waitingPlayer.connected && waitingPlayer.id !== socket.id) {
+    if (
+      waitingPlayer &&
+      waitingPlayer.connected &&
+      waitingPlayer.id !== socket.id
+    ) {
+
       createMatch(waitingPlayer, socket, null, "quick");
+
       waitingPlayer = null;
+
     } else {
+
       waitingPlayer = socket;
       socket.emit("waiting");
     }
+
   });
 
   socket.on("createPrivateRoom", (username) => {
+
     players[socket.id] = {
       username: cleanName(username)
     };
@@ -66,10 +102,10 @@ io.on("connection", (socket) => {
       roomCode
     });
 
-    console.log("Private room created:", roomCode);
   });
 
   socket.on("joinPrivateRoom", (data) => {
+
     const username = cleanName(data.username);
     const roomCode = data.roomCode;
 
@@ -90,25 +126,44 @@ io.on("connection", (socket) => {
     }
 
     const hostId = privateRoom.host;
-    const hostSocket = io.sockets.sockets.get(hostId);
+    const hostSocket =
+      io.sockets.sockets.get(hostId);
 
     if (!hostSocket) {
-      socket.emit("privateRoomError", "Host left the room");
+
+      socket.emit(
+        "privateRoomError",
+        "Host left the room"
+      );
+
       delete privateRooms[roomCode];
       return;
     }
 
     privateRoom.players.push(socket.id);
+
     socket.join(roomCode);
 
-    createMatch(hostSocket, socket, roomCode, "private");
+    createMatch(
+      hostSocket,
+      socket,
+      roomCode,
+      "private"
+    );
 
     delete privateRooms[roomCode];
+
   });
 
   socket.on("tap", async (data) => {
-    const room = typeof data === "string" ? data : data.room;
-    const clientReaction = data.clientReaction || null;
+
+    const room =
+      typeof data === "string"
+        ? data
+        : data.room;
+
+    const clientReaction =
+      data.clientReaction || null;
 
     const game = rooms[room];
 
@@ -118,14 +173,19 @@ io.on("connection", (socket) => {
     if (game.clicks[socket.id]) return;
 
     if (!game.gameStarted) {
+
       game.gameOver = true;
 
-      const opponent = game.players.find(id => id !== socket.id);
+      const opponent =
+        game.players.find(
+          id => id !== socket.id
+        );
 
       io.to(room).emit("result", {
         winner: opponent,
         cheater: socket.id,
-        winnerName: players[opponent]?.username || "Player",
+        winnerName:
+          players[opponent]?.username || "Player",
         t1: 0,
         t2: 0
       });
@@ -134,32 +194,48 @@ io.on("connection", (socket) => {
       return;
     }
 
-    const reactionTime = Date.now() - game.startTime;
+    const reactionTime =
+      Date.now() - game.startTime;
 
     game.clicks[socket.id] = {
       serverReaction: reactionTime,
       clientReaction
     };
 
-    if (Object.keys(game.clicks).length === 2) {
+    if (
+      Object.keys(game.clicks).length === 2
+    ) {
+
       game.gameOver = true;
 
       const [p1, p2] = game.players;
 
-      const t1 = game.clicks[p1].clientReaction || game.clicks[p1].serverReaction;
-      const t2 = game.clicks[p2].clientReaction || game.clicks[p2].serverReaction;
+      const t1 =
+        game.clicks[p1].clientReaction ||
+        game.clicks[p1].serverReaction;
+
+      const t2 =
+        game.clicks[p2].clientReaction ||
+        game.clicks[p2].serverReaction;
 
       const winner = t1 <= t2 ? p1 : p2;
-      const loser = winner === p1 ? p2 : p1;
 
-      const winnerName = players[winner]?.username || "Player";
-      const loserName = players[loser]?.username || "Player";
+      const loser =
+        winner === p1 ? p2 : p1;
+
+      const winnerName =
+        players[winner]?.username || "Player";
+
+      const loserName =
+        players[loser]?.username || "Player";
 
       const winnerReaction =
-        game.clicks[winner].clientReaction || game.clicks[winner].serverReaction;
+        game.clicks[winner].clientReaction ||
+        game.clicks[winner].serverReaction;
 
       const loserReaction =
-        game.clicks[loser].clientReaction || game.clicks[loser].serverReaction;
+        game.clicks[loser].clientReaction ||
+        game.clicks[loser].serverReaction;
 
       io.to(room).emit("result", {
         winner,
@@ -169,56 +245,103 @@ io.on("connection", (socket) => {
       });
 
       try {
+
         await db.collection("leaderboard").add({
           winnerName,
           loserName,
           winnerReaction,
           loserReaction,
-          winnerServerReaction: game.clicks[winner].serverReaction,
-          loserServerReaction: game.clicks[loser].serverReaction,
-          matchType: game.matchType,
+          winnerServerReaction:
+            game.clicks[winner].serverReaction,
+          loserServerReaction:
+            game.clicks[loser].serverReaction,
           room,
-          createdAt: admin.firestore.FieldValue.serverTimestamp()
+          matchType: game.matchType,
+          createdAt:
+            admin.firestore.FieldValue.serverTimestamp()
         });
 
-        await updatePlayerStats(winnerName, true, winnerReaction);
-        await updatePlayerStats(loserName, false, loserReaction);
+        await updatePlayerStats(
+          winnerName,
+          true,
+          winnerReaction
+        );
 
-        await db.collection("analytics").doc("global").set({
-          totalMatches: admin.firestore.FieldValue.increment(1),
-          lastMatchAt: admin.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
+        await updatePlayerStats(
+          loserName,
+          false,
+          loserReaction
+        );
 
-        console.log("Stats saved:", winnerName, "beat", loserName);
+        await db
+          .collection("analytics")
+          .doc("global")
+          .set({
+            totalMatches:
+              admin.firestore.FieldValue.increment(1),
+
+            lastMatchAt:
+              admin.firestore.FieldValue.serverTimestamp()
+
+          }, { merge: true });
+
       } catch (error) {
-        console.error("Failed to save stats:", error);
+
+        console.error(
+          "Failed to save stats:",
+          error
+        );
       }
 
       cleanupRoom(room);
     }
+
   });
 
   socket.on("disconnect", () => {
-    console.log("Disconnected:", socket.id);
 
-    if (waitingPlayer && waitingPlayer.id === socket.id) {
+    onlinePlayers--;
+
+    if (onlinePlayers < 0) {
+      onlinePlayers = 0;
+    }
+
+    io.emit("onlinePlayers", onlinePlayers);
+
+    if (
+      waitingPlayer &&
+      waitingPlayer.id === socket.id
+    ) {
       waitingPlayer = null;
     }
 
     for (const code in privateRooms) {
-      const privateRoom = privateRooms[code];
 
-      if (privateRoom.players.includes(socket.id)) {
+      const privateRoom =
+        privateRooms[code];
+
+      if (
+        privateRoom.players.includes(socket.id)
+      ) {
+
         io.to(code).emit("opponentLeft");
+
         delete privateRooms[code];
       }
     }
 
     for (const room in rooms) {
+
       const game = rooms[room];
 
-      if (game.players.includes(socket.id)) {
-        const opponent = game.players.find(id => id !== socket.id);
+      if (
+        game.players.includes(socket.id)
+      ) {
+
+        const opponent =
+          game.players.find(
+            id => id !== socket.id
+          );
 
         if (opponent) {
           io.to(opponent).emit("opponentLeft");
@@ -230,10 +353,19 @@ io.on("connection", (socket) => {
 
     delete players[socket.id];
   });
+
 });
 
-function createMatch(player1, player2, customRoom = null, matchType = "quick") {
-  const room = customRoom || player1.id + "#" + player2.id;
+function createMatch(
+  player1,
+  player2,
+  customRoom = null,
+  matchType = "quick"
+) {
+
+  const room =
+    customRoom ||
+    player1.id + "#" + player2.id;
 
   player1.join(room);
   player2.join(room);
@@ -251,79 +383,133 @@ function createMatch(player1, player2, customRoom = null, matchType = "quick") {
 
   player1.emit("matchFound", {
     room,
-    opponentName: players[player2.id]?.username || "Player"
+    opponentName:
+      players[player2.id]?.username || "Player"
   });
 
   player2.emit("matchFound", {
     room,
-    opponentName: players[player1.id]?.username || "Player"
+    opponentName:
+      players[player1.id]?.username || "Player"
   });
 
   startCountdown(room);
 }
 
 function startCountdown(room) {
+
   let countdown = 3;
 
-  rooms[room].countdownInterval = setInterval(() => {
-    if (!rooms[room]) return;
+  rooms[room].countdownInterval =
+    setInterval(() => {
 
-    io.to(room).emit("countdown", countdown);
-    countdown--;
+      if (!rooms[room]) return;
 
-    if (countdown < 0) {
-      clearInterval(rooms[room].countdownInterval);
+      io.to(room).emit(
+        "countdown",
+        countdown
+      );
 
-      rooms[room].startTimeout = setTimeout(() => {
-        if (!rooms[room]) return;
+      countdown--;
 
-        rooms[room].gameStarted = true;
-        rooms[room].startTime = Date.now();
+      if (countdown < 0) {
 
-        io.to(room).emit("startGame");
-      }, Math.random() * 2000 + 1000);
-    }
-  }, 1000);
+        clearInterval(
+          rooms[room].countdownInterval
+        );
+
+        rooms[room].startTimeout =
+          setTimeout(() => {
+
+            if (!rooms[room]) return;
+
+            rooms[room].gameStarted = true;
+
+            rooms[room].startTime = Date.now();
+
+            io.to(room).emit("startGame");
+
+          }, Math.random() * 2000 + 1000);
+      }
+
+    }, 1000);
 }
 
-async function updatePlayerStats(username, didWin, reaction) {
-  const playerId = username.toLowerCase().replace(/[^a-z0-9]/g, "_");
-  const ref = db.collection("players").doc(playerId);
+async function updatePlayerStats(
+  username,
+  didWin,
+  reaction
+) {
 
-  await db.runTransaction(async (transaction) => {
-    const doc = await transaction.get(ref);
+  const playerId =
+    username
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "_");
 
-    if (!doc.exists) {
-      transaction.set(ref, {
+  const ref =
+    db.collection("players").doc(playerId);
+
+  await db.runTransaction(
+    async (transaction) => {
+
+      const doc =
+        await transaction.get(ref);
+
+      if (!doc.exists) {
+
+        transaction.set(ref, {
+          username,
+          wins: didWin ? 1 : 0,
+          losses: didWin ? 0 : 1,
+          gamesPlayed: 1,
+          fastestReaction: reaction,
+          lastReaction: reaction,
+          lastPlayed:
+            admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        return;
+      }
+
+      const data = doc.data();
+
+      const currentFastest =
+        data.fastestReaction || reaction;
+
+      const newFastest =
+        Math.min(currentFastest, reaction);
+
+      transaction.update(ref, {
+
         username,
-        wins: didWin ? 1 : 0,
-        losses: didWin ? 0 : 1,
-        gamesPlayed: 1,
-        fastestReaction: reaction,
+
+        wins:
+          admin.firestore.FieldValue.increment(
+            didWin ? 1 : 0
+          ),
+
+        losses:
+          admin.firestore.FieldValue.increment(
+            didWin ? 0 : 1
+          ),
+
+        gamesPlayed:
+          admin.firestore.FieldValue.increment(1),
+
+        fastestReaction: newFastest,
+
         lastReaction: reaction,
-        lastPlayed: admin.firestore.FieldValue.serverTimestamp()
+
+        lastPlayed:
+          admin.firestore.FieldValue.serverTimestamp()
+
       });
 
-      return;
-    }
-
-    const data = doc.data();
-    const currentFastest = data.fastestReaction || reaction;
-    const newFastest = Math.min(currentFastest, reaction);
-
-    transaction.update(ref, {
-      username,
-      wins: admin.firestore.FieldValue.increment(didWin ? 1 : 0),
-      losses: admin.firestore.FieldValue.increment(didWin ? 0 : 1),
-      gamesPlayed: admin.firestore.FieldValue.increment(1),
-      fastestReaction: newFastest,
-      lastReaction: reaction,
-      lastPlayed: admin.firestore.FieldValue.serverTimestamp()
     });
-  });
 }
 
 function cleanupRoom(room) {
+
   const game = rooms[room];
 
   if (!game) return;
@@ -337,17 +523,21 @@ function cleanupRoom(room) {
   }
 
   delete rooms[room];
-
-  console.log("Room cleaned:", room);
 }
 
 function generateRoomCode() {
+
   let code = "";
 
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const chars =
+    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
   for (let i = 0; i < 5; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
+
+    code +=
+      chars[
+      Math.floor(Math.random() * chars.length)
+      ];
   }
 
   if (privateRooms[code]) {
@@ -358,6 +548,7 @@ function generateRoomCode() {
 }
 
 function cleanName(name) {
+
   if (!name) return "Player";
 
   return String(name)
@@ -365,8 +556,11 @@ function cleanName(name) {
     .slice(0, 12) || "Player";
 }
 
-const PORT = process.env.PORT || 3000;
+const PORT =
+  process.env.PORT || 3000;
 
 server.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
+  console.log(
+    "Server running on port " + PORT
+  );
 });
