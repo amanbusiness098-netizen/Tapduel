@@ -364,3 +364,8 @@ installBtn.addEventListener("click", async () => {
   deferredPrompt = null;
   installBtn.style.display = "none";
 });
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js");
+  });
+}
