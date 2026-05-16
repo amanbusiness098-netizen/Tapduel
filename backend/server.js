@@ -475,6 +475,16 @@ async function updatePlayerStats(
       }
 
       const data = doc.data();
+      const today = new Date().toISOString().slice(0, 10);
+      const lastClaimDate = data.lastDailyReward || "";
+
+      let streak = data.streak || 0;
+      let dailyBonusXp = 0;
+
+      if (lastClaimDate !== today) {
+        streak += 1;
+        dailyBonusXp = 50;
+      }
 
       const currentFastest =
         data.fastestReaction || reaction;
@@ -485,7 +495,7 @@ async function updatePlayerStats(
         (data.wins || 0) + (didWin ? 1 : 0);
 
       const newRank = getRank(newWins);
-      const gainedXp = didWin ? 25 : 10;
+      const gainedXp = (didWin ? 25 : 10) + dailyBonusXp;
 
       const newXp =
         (data.xp || 0) + gainedXp;
@@ -514,6 +524,9 @@ async function updatePlayerStats(
 
         xp: newXp,
         level: newLevel,
+
+        streak,
+        lastDailyReward: today,
 
         lastReaction: reaction,
 
