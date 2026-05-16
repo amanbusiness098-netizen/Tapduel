@@ -369,3 +369,31 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/sw.js");
   });
 }
+const claimRewardBtn = document.getElementById("claimRewardBtn");
+const streakCount = document.getElementById("streakCount");
+
+let streak = localStorage.getItem("dailyStreak") || 0;
+streakCount.innerText = streak + " Days";
+
+claimRewardBtn.addEventListener("click", () => {
+
+  let lastClaim = localStorage.getItem("lastClaimDate");
+  let today = new Date().toDateString();
+
+  if(lastClaim === today){
+    alert("Daily reward already claimed today!");
+    return;
+  }
+
+  streak++;
+  localStorage.setItem("dailyStreak", streak);
+  localStorage.setItem("lastClaimDate", today);
+
+  streakCount.innerText = streak + " Days";
+
+  xp += 50;
+
+  localStorage.setItem("xp", xp);
+
+  alert("Reward claimed! +50 XP");
+});
