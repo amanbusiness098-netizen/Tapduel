@@ -26,10 +26,7 @@
       <span id="onlineCount">0 online</span>
       <span id="totalMatches">0 matches</span>
     </div>
-    <button id="installBtn" style="display:none;">
-      INSTALL APP
-    </button>
-
+    
     <h2 id="status">Enter your name</h2>
 
     <div id="playerInfo">
@@ -37,24 +34,24 @@
       <span id="vsText">VS</span>
       <span id="enemyName"></span>
     </div>
-    
+
     <div id="dailyRewardBox">
-  <h3>DAILY REWARD</h3>
+      <h3>DAILY REWARD</h3>
 
-  <div class="rewardRow">
-    <span>Current Streak</span>
-    <span id="streakCount">0 Days</span>
-  </div>
+      <div class="rewardRow">
+        <span>Current Streak</span>
+        <span id="streakCount">0 Days</span>
+      </div>
 
-  <div class="rewardRow">
-    <span>Reward</span>
-    <span>+50 XP</span>
-  </div>
+      <div class="rewardRow">
+        <span>Reward</span>
+        <span>+50 XP</span>
+      </div>
 
-  <button id="claimRewardBtn">
-    CLAIM DAILY REWARD
-  </button>
-</div>
+      <button id="claimRewardBtn">
+        CLAIM DAILY REWARD
+      </button>
+    </div>
 
     <input type="text" id="username" placeholder="Enter username" maxlength="12">
 
@@ -111,6 +108,23 @@
         <span>Fastest</span>
         <span id="fastestStat">0 ms</span>
       </div>
+      <div id="dailyRewardBox">
+        <h3>DAILY REWARD</h3>
+
+        <div class="rewardRow">
+          <span>Current Streak</span>
+          <span id="streakCount">0 Days</span>
+        </div>
+
+        <div class="rewardRow">
+          <span>Reward</span>
+          <span>+50 XP</span>
+        </div>
+
+        <button id="claimRewardBtn">
+          CLAIM DAILY REWARD
+        </button>
+      </div>
 
     </div>
     <div id="leaderboard">
@@ -123,7 +137,7 @@
       <div id="winsLeaderboardList">Loading...</div>
     </div>
 
-  </div>
+  </div
 
   <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 

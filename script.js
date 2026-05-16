@@ -1,3 +1,4 @@
+const dailyRewardBox = document.getElementById("dailyRewardBox");
 const copyRoomBtn = document.getElementById("copyRoomBtn");
 const onlineCount = document.getElementById("onlineCount");
 const totalMatches = document.getElementById("totalMatches");
@@ -44,6 +45,7 @@ let mode = "quick";
 tapBtn.style.display = "none";
 
 function hideMenu() {
+  dailyRewardBox.style.display = "none";
   usernameInput.disabled = true;
   usernameInput.style.display = "none";
 
@@ -299,7 +301,7 @@ socket.on("opponentLeft", () => {
 
   statusText.innerText = "Opponent Left";
 
-  tapBtn.classList.remove("activeBtn");
+  ltapBtn.classList.remove("activeBtn");
   tapBtn.innerText = "PLAY AGAIN";
   tapBtn.disabled = false;
 });
@@ -346,24 +348,7 @@ copyRoomBtn.addEventListener("click", () => {
   alert("Room link copied!");
 });
 
-let deferredPrompt;
-const installBtn = document.getElementById("installBtn");
 
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  installBtn.style.display = "block";
-});
-
-installBtn.addEventListener("click", async () => {
-  if (!deferredPrompt) return;
-
-  deferredPrompt.prompt();
-  await deferredPrompt.userChoice;
-
-  deferredPrompt = null;
-  installBtn.style.display = "none";
-});
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js");
