@@ -277,7 +277,7 @@ socket.on("result", (data) => {
   }
 
   lastResultText =
-    statusText.innerText + "\nPlay TapDuel: https://tapduel.netlify.app";
+    statusText.innerText + "\nPlay TapDuel: https://tapduel.vercel.app";
 
   shareBtn.style.display = "inline-block";
 
