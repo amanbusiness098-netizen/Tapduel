@@ -313,7 +313,7 @@ shareBtn.addEventListener("click", async () => {
     await navigator.share({
       title: "TapDuel Result",
       text: lastResultText,
-      url: "https://tapduel.netlify.app"
+      url: "https://tapduel.vercel.app"
     });
   } else {
     navigator.clipboard.writeText(lastResultText);
@@ -367,27 +367,4 @@ claimRewardBtn.addEventListener("click", () => {
   alert("Daily reward is added automatically after your first match each day.");
 });
 
-const streakCount = document.getElementById("streakCount");
 
-let streak = localStorage.getItem("dailyStreak") || 0;
-streakCount.innerText = streak + " Days";
-
-claimRewardBtn.addEventListener("click", () => {
-
-  let lastClaim = localStorage.getItem("lastClaimDate");
-  let today = new Date().toDateString();
-
-  if (lastClaim === today) {
-    alert("Daily reward already claimed today!");
-    return;
-  }
-
-  streak++;
-  localStorage.setItem("dailyStreak", streak);
-  localStorage.setItem("lastClaimDate", today);
-
-  streakCount.innerText = streak + " Days";
-
-
-  alert("Reward claimed! +50 XP");
-});
