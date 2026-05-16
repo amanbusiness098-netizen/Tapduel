@@ -4,53 +4,43 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>TapDuel - 1v1 Reaction Battle Game</title>
+
   <meta name="google-site-verification" content="wNIyho7MUn90jMWM2Sd53r3yuTClC1XRQF_NM3L7rTc" />
+
   <meta name="description"
     content="TapDuel is a fast 1v1 multiplayer reaction game. Challenge friends, test your speed, climb leaderboards, and prove your reaction time.">
 
-  <meta name="keywords" content="TapDuel, reaction game, multiplayer game, 1v1 game, online reaction test, speed game">
+  <meta name="keywords"
+    content="TapDuel, reaction game, multiplayer game, 1v1 game, online reaction test, speed game">
 
   <meta property="og:title" content="TapDuel - 1v1 Reaction Battle">
   <meta property="og:description" content="Challenge your friends in a fast realtime reaction battle.">
   <meta property="og:url" content="https://tapduel.vercel.app">
   <meta property="og:type" content="website">
+
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
 </head>
 
 <body>
+
   <div class="container">
+
     <h1>TapDuel</h1>
+
     <div id="liveStats">
       <span id="onlineCount">0 online</span>
       <span id="totalMatches">0 matches</span>
     </div>
-    
+
     <h2 id="status">Enter your name</h2>
 
     <div id="playerInfo">
       <span id="youName"></span>
       <span id="vsText">VS</span>
       <span id="enemyName"></span>
-    </div>
-
-    <div id="dailyRewardBox">
-      <h3>DAILY REWARD</h3>
-
-      <div class="rewardRow">
-        <span>Current Streak</span>
-        <span id="streakCount">0 Days</span>
-      </div>
-
-      <div class="rewardRow">
-        <span>Reward</span>
-        <span>+50 XP</span>
-      </div>
-
-      <button id="claimRewardBtn">
-        CLAIM DAILY REWARD
-      </button>
     </div>
 
     <input type="text" id="username" placeholder="Enter username" maxlength="12">
@@ -66,20 +56,23 @@
     </div>
 
     <button id="tapBtn" disabled>WAITING</button>
+
     <button id="shareBtn" style="display:none;">
       SHARE RESULT
     </button>
+
     <button id="copyRoomBtn" style="display:none;">
       COPY ROOM LINK
     </button>
-    <div id="playerStats">
 
+    <div id="playerStats">
       <h3>PLAYER STATS</h3>
 
       <div class="statsRow">
         <span>Wins</span>
         <span id="winsStat">0</span>
       </div>
+
       <div class="statsRow">
         <span>Level</span>
         <span id="levelStat">1</span>
@@ -89,9 +82,20 @@
         <span>XP</span>
         <span id="xpStat">0</span>
       </div>
+
       <div class="statsRow">
         <span>Rank</span>
         <span id="rankStat">Rookie</span>
+      </div>
+
+      <div class="statsRow">
+        <span>Daily Streak</span>
+        <span id="streakStat">0 Days</span>
+      </div>
+
+      <div class="statsRow">
+        <span>Daily Reward</span>
+        <span id="dailyRewardStat">Play 1 match today</span>
       </div>
 
       <div class="statsRow">
@@ -108,8 +112,8 @@
         <span>Fastest</span>
         <span id="fastestStat">0 ms</span>
       </div>
-            
     </div>
+
     <div id="leaderboard">
       <h3>TOP REACTIONS</h3>
       <div id="leaderboardList">Loading...</div>
@@ -120,7 +124,7 @@
       <div id="winsLeaderboardList">Loading...</div>
     </div>
 
-  </div
+  </div>
 
   <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 
@@ -169,19 +173,15 @@
         const rank = ranks[index] || `#${index + 1}`;
 
         leaderboardList.innerHTML += `
-      <div class="leaderboardItem">
-        <span>${rank} ${data.winnerName || "Player"}</span>
-        <span>${data.winnerReaction || 0} ms</span>
-      </div>
-    `;
+          <div class="leaderboardItem">
+            <span>${rank} ${data.winnerName || "Player"}</span>
+            <span>${data.winnerReaction || 0} ms</span>
+          </div>
+        `;
       });
     }
 
-
-    loadLeaderboard();
-    loadWinsLeaderboard();
     async function loadPlayerStats() {
-
       const savedName = localStorage.getItem("tapduel_username");
 
       if (!savedName) return;
@@ -191,14 +191,14 @@
         .replace(/[^a-z0-9]/g, "_");
 
       const playerRef = doc(db, "players", playerId);
-
       const snapshot = await getDoc(playerRef);
 
       if (!snapshot.exists()) return;
 
       const data = snapshot.data();
-      document.getElementById("rankStat").innerText =
-        data.rank || "Rookie";
+
+      document.getElementById("winsStat").innerText =
+        data.wins || 0;
 
       document.getElementById("levelStat").innerText =
         data.level || 1;
@@ -206,8 +206,16 @@
       document.getElementById("xpStat").innerText =
         data.xp || 0;
 
-      document.getElementById("winsStat").innerText =
-        data.wins || 0;
+      document.getElementById("rankStat").innerText =
+        data.rank || "Rookie";
+
+      document.getElementById("streakStat").innerText =
+        (data.streak || 0) + " Days";
+
+      document.getElementById("dailyRewardStat").innerText =
+        data.lastDailyReward
+          ? "Auto claimed today"
+          : "Play 1 match today";
 
       document.getElementById("lossesStat").innerText =
         data.losses || 0;
@@ -217,8 +225,8 @@
 
       document.getElementById("fastestStat").innerText =
         (data.fastestReaction || 0) + " ms";
-
     }
+
     async function loadWinsLeaderboard() {
       const q = query(
         collection(db, "players"),
@@ -235,19 +243,21 @@
         const data = docSnap.data();
 
         list.innerHTML += `
-      <div class="leaderboardItem">
-        <span>#${index + 1} ${data.username || "Player"}</span>
-        <span>${data.wins || 0} wins</span>
-      </div>
-    `;
+          <div class="leaderboardItem">
+            <span>#${index + 1} ${data.username || "Player"}</span>
+            <span>${data.wins || 0} wins</span>
+          </div>
+        `;
       });
     }
 
+    loadLeaderboard();
     loadPlayerStats();
     loadWinsLeaderboard();
   </script>
 
   <script src="script.js"></script>
+
 </body>
 
 </html>

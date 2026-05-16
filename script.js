@@ -3,27 +3,26 @@ const onlineCount = document.getElementById("onlineCount");
 const totalMatches = document.getElementById("totalMatches");
 const leaderboard = document.getElementById("leaderboard");
 const playerStats = document.getElementById("playerStats");
-let leaderboardRefreshTimeout;
-const leaderboardList = document.getElementById("leaderboardList");
-let reactionInterval;
-let reactionStart;
-let waitingAnimation;
-const socket = io("https://tapduel.onrender.com", {
-  autoConnect: false
-});
-
 
 const shareBtn = document.getElementById("shareBtn");
-let lastResultText = "";
+
 const youName = document.getElementById("youName");
 const enemyName = document.getElementById("enemyName");
+
 const statusText = document.getElementById("status");
+
 const tapBtn = document.getElementById("tapBtn");
+
 const startBtn = document.getElementById("startBtn");
 const createRoomBtn = document.getElementById("createRoomBtn");
 const joinRoomBtn = document.getElementById("joinRoomBtn");
+
 const usernameInput = document.getElementById("username");
 const roomInput = document.getElementById("roomInput");
+
+const socket = io("https://tapduel.onrender.com", {
+  autoConnect: false
+});
 
 const beepSound = new Audio("sounds/beep.mp3");
 const startSound = new Audio("sounds/start.mp3");
@@ -33,17 +32,24 @@ const loseSound = new Audio("sounds/lose.mp3");
 let currentRoom = null;
 let gameStarted = false;
 let gameEnded = false;
+let reactionStart;
+let reactionInterval;
+let waitingAnimation;
 let username = "";
-const savedUsername = localStorage.getItem("tapduel_username");
+let mode = "quick";
+let lastResultText = "";
+
+const savedUsername =
+  localStorage.getItem("tapduel_username");
 
 if (savedUsername) {
   usernameInput.value = savedUsername;
 }
-let mode = "quick";
 
 tapBtn.style.display = "none";
 
 function hideMenu() {
+
   usernameInput.disabled = true;
   usernameInput.style.display = "none";
 
@@ -53,27 +59,51 @@ function hideMenu() {
   roomInput.style.display = "none";
 
   tapBtn.style.display = "inline-block";
-  tapBtn.disabled = true;
+
   leaderboard.style.display = "none";
 
-  if (playerStats) {
-    playerStats.style.display = "none";
-  }
+  playerStats.style.display = "none";
+
+  shareBtn.style.display = "none";
+  copyRoomBtn.style.display = "none";
+}
+
+function showMenusAgain() {
+
+  usernameInput.disabled = false;
+  usernameInput.style.display = "block";
+
+  startBtn.style.display = "block";
+  createRoomBtn.style.display = "block";
+  joinRoomBtn.style.display = "block";
+  roomInput.style.display = "block";
+
+  tapBtn.style.display = "none";
+
+  playerStats.style.display = "block";
+  leaderboard.style.display = "block";
 }
 
 function validateUsername() {
-  username = usernameInput.value.trim();
-  localStorage.setItem("tapduel_username", username);
+
+  username =
+    usernameInput.value.trim();
 
   if (username.length < 2) {
     alert("Enter at least 2 letters");
     return false;
   }
 
+  localStorage.setItem(
+    "tapduel_username",
+    username
+  );
+
   return true;
 }
 
 startBtn.addEventListener("click", () => {
+
   if (!validateUsername()) return;
 
   mode = "quick";
@@ -81,11 +111,13 @@ startBtn.addEventListener("click", () => {
   hideMenu();
 
   tapBtn.innerText = "CONNECTING...";
+  tapBtn.disabled = true;
 
   socket.connect();
 });
 
 createRoomBtn.addEventListener("click", () => {
+
   if (!validateUsername()) return;
 
   mode = "create";
@@ -93,14 +125,17 @@ createRoomBtn.addEventListener("click", () => {
   hideMenu();
 
   tapBtn.innerText = "CREATING ROOM...";
+  tapBtn.disabled = true;
 
   socket.connect();
 });
 
 joinRoomBtn.addEventListener("click", () => {
+
   if (!validateUsername()) return;
 
-  const roomCode = roomInput.value.trim().toUpperCase();
+  const roomCode =
+    roomInput.value.trim().toUpperCase();
 
   if (roomCode.length < 4) {
     alert("Invalid room code");
@@ -112,19 +147,22 @@ joinRoomBtn.addEventListener("click", () => {
   hideMenu();
 
   tapBtn.innerText = "JOINING ROOM...";
+  tapBtn.disabled = true;
 
   socket.connect();
 
   socket.once("connect", () => {
+
     socket.emit("joinPrivateRoom", {
       username,
       roomCode
     });
+
   });
+
 });
 
 socket.on("connect", () => {
-  console.log("Connected:", socket.id);
 
   if (mode === "quick") {
     socket.emit("joinGame", username);
@@ -133,6 +171,7 @@ socket.on("connect", () => {
   if (mode === "create") {
     socket.emit("createPrivateRoom", username);
   }
+
 });
 
 socket.on("waiting", () => {
@@ -156,12 +195,16 @@ socket.on("waiting", () => {
 });
 
 socket.on("privateRoomCreated", (data) => {
+
   currentRoom = data.roomCode;
 
-  statusText.innerText = "Room Code:\n" + data.roomCode;
+  statusText.innerText =
+    "Room Code:\n" + data.roomCode;
+
   tapBtn.innerText = "WAITING FOR FRIEND";
   tapBtn.disabled = true;
-  copyRoomBtn.style.display = "inline-block";
+
+  copyRoomBtn.style.display = "block";
 });
 
 socket.on("privateRoomError", (message) => {
@@ -170,186 +213,232 @@ socket.on("privateRoomError", (message) => {
 });
 
 socket.on("matchFound", (data) => {
+
   clearInterval(waitingAnimation);
+
   currentRoom = data.room;
+
   gameStarted = false;
   gameEnded = false;
+
   youName.innerText = username;
   enemyName.innerText = data.opponentName;
 
-  statusText.innerText = "Match Found vs " + data.opponentName;
+  statusText.innerText =
+    "Match Found vs " + data.opponentName;
 
   tapBtn.innerText = "WAIT...";
   tapBtn.disabled = true;
 });
 
 socket.on("countdown", (num) => {
+
   beepSound.play();
 
-  statusText.innerText = num;
   statusText.classList.add("countdown");
+
+  statusText.innerText = num;
+
 });
 
 socket.on("startGame", () => {
+
   startSound.play();
 
   statusText.classList.remove("countdown");
 
   statusText.innerText = "GO!";
-  statusText.style.color = "#00ff99";
-  statusText.style.transform = "scale(1.5)";
 
   setTimeout(() => {
+
     gameStarted = true;
+
     reactionStart = Date.now();
 
     reactionInterval = setInterval(() => {
 
-      const current = Date.now() - reactionStart;
+      const current =
+        Date.now() - reactionStart;
 
-      tapBtn.innerText = current + " ms";
+      tapBtn.innerText =
+        current + " ms";
 
     }, 10);
 
-    if (navigator.vibrate) {
-      navigator.vibrate(120);
-    }
+    tapBtn.innerText = "TAP";
+
+    tapBtn.disabled = false;
+
+    tapBtn.classList.add("activeBtn");
 
     statusText.innerText = "TAP NOW!";
-    statusText.style.transform = "scale(1)";
 
-    tapBtn.innerText = "TAP";
-    tapBtn.disabled = false;
-    tapBtn.classList.add("activeBtn");
   }, 400);
+
 });
 
 tapBtn.addEventListener("click", () => {
+
   if (gameEnded) {
     location.reload();
     return;
   }
 
   if (!gameStarted) return;
+
   clearInterval(reactionInterval);
-  const clientReaction = Date.now() - reactionStart;
+
+  const clientReaction =
+    Date.now() - reactionStart;
 
   socket.emit("tap", {
     room: currentRoom,
     clientReaction
   });
+
   tapBtn.disabled = true;
+
 });
 
 socket.on("result", (data) => {
+
   clearInterval(reactionInterval);
+
   gameEnded = true;
   gameStarted = false;
 
   tapBtn.classList.remove("activeBtn");
+
   statusText.classList.remove("win");
   statusText.classList.remove("lose");
 
   if (data.winner === socket.id) {
+
     winSound.play();
 
-    if (navigator.vibrate) {
-      navigator.vibrate([120, 50, 120]);
-    }
-
     statusText.innerText =
-      "YOU WIN!\n" + data.t1 + "ms vs " + data.t2 + "ms";
+      "YOU WIN!\n" +
+      data.t1 + "ms vs " +
+      data.t2 + "ms";
 
     statusText.classList.add("win");
+
   } else {
+
     loseSound.play();
 
-    if (navigator.vibrate) {
-      navigator.vibrate(300);
-    }
-
     statusText.innerText =
-      "YOU LOSE!\n" + data.t1 + "ms vs " + data.t2 + "ms";
+      "YOU LOSE!\n" +
+      data.t1 + "ms vs " +
+      data.t2 + "ms";
 
     statusText.classList.add("lose");
+
   }
 
   lastResultText =
-    statusText.innerText + "\nPlay TapDuel: https://tapduel.vercel.app";
-
-  shareBtn.style.display = "inline-block";
+    statusText.innerText +
+    "\nPlay TapDuel: https://tapduel.vercel.app";
 
   tapBtn.innerText = "PLAY AGAIN";
   tapBtn.disabled = false;
 
+  shareBtn.style.display = "block";
+
+  playerStats.style.display = "block";
   leaderboard.style.display = "block";
 
-  if (playerStats) {
-    playerStats.style.display = "block";
-  }
-  
 });
 
 socket.on("opponentLeft", () => {
+
   gameEnded = true;
   gameStarted = false;
 
-  statusText.classList.remove("countdown");
-  statusText.classList.remove("win");
-  statusText.classList.add("lose");
+  tapBtn.classList.remove("activeBtn");
 
   statusText.innerText = "Opponent Left";
 
-  tapBtn.classList.remove("activeBtn");
   tapBtn.innerText = "PLAY AGAIN";
   tapBtn.disabled = false;
+
 });
+
 shareBtn.addEventListener("click", async () => {
+
   if (navigator.share) {
+
     await navigator.share({
       title: "TapDuel Result",
       text: lastResultText,
       url: "https://tapduel.vercel.app"
     });
+
   } else {
-    navigator.clipboard.writeText(lastResultText);
+
+    navigator.clipboard.writeText(
+      lastResultText
+    );
+
     alert("Result copied!");
+
   }
+
 });
 
-socket.on("onlinePlayers", (count) => {
-  onlineCount.innerText = count + " online";
-});
-
-async function loadGlobalStats() {
-  try {
-    const res = await fetch("https://tapduel.onrender.com/stats");
-    const data = await res.json();
-
-    totalMatches.innerText = (data.totalMatches || 0) + " matches";
-
-    if (data.onlinePlayers !== undefined) {
-      onlineCount.innerText = data.onlinePlayers + " online";
-    }
-  } catch (error) {
-    console.log("Stats load failed");
-  }
-}
-
-loadGlobalStats();
 copyRoomBtn.addEventListener("click", () => {
+
   const inviteText =
     "Join my TapDuel room: " +
     currentRoom +
-    "\nhttps://tapduel.netlify.app";
+    "\nhttps://tapduel.vercel.app";
 
   navigator.clipboard.writeText(inviteText);
+
   alert("Room link copied!");
+
 });
 
+socket.on("onlinePlayers", (count) => {
+  onlineCount.innerText =
+    count + " online";
+});
+
+async function loadGlobalStats() {
+
+  try {
+
+    const res =
+      await fetch(
+        "https://tapduel.onrender.com/stats"
+      );
+
+    const data = await res.json();
+
+    totalMatches.innerText =
+      (data.totalMatches || 0) +
+      " matches";
+
+    onlineCount.innerText =
+      (data.onlinePlayers || 0) +
+      " online";
+
+  } catch (error) {
+
+    console.log("Stats load failed");
+
+  }
+
+}
+
+loadGlobalStats();
 
 if ("serviceWorker" in navigator) {
+
   window.addEventListener("load", () => {
+
     navigator.serviceWorker.register("/sw.js");
+
   });
+
 }
