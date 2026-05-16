@@ -1,4 +1,3 @@
-const dailyRewardBox = document.getElementById("dailyRewardBox");
 const copyRoomBtn = document.getElementById("copyRoomBtn");
 const onlineCount = document.getElementById("onlineCount");
 const totalMatches = document.getElementById("totalMatches");
@@ -45,7 +44,6 @@ let mode = "quick";
 tapBtn.style.display = "none";
 
 function hideMenu() {
-  dailyRewardBox.style.display = "none";
   usernameInput.disabled = true;
   usernameInput.style.display = "none";
 
@@ -289,9 +287,7 @@ socket.on("result", (data) => {
   if (playerStats) {
     playerStats.style.display = "block";
   }
-  if (dailyRewardBox) {
-    dailyRewardBox.style.display = "block";
-  }
+  
 });
 
 socket.on("opponentLeft", () => {
@@ -357,14 +353,3 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/sw.js");
   });
 }
-const claimRewardBtn = document.getElementById("claimRewardBtn");
-const streakCount = document.getElementById("streakCount");
-
-let streak = localStorage.getItem("dailyStreak") || 0;
-streakCount.innerText = streak + " Days";
-
-claimRewardBtn.addEventListener("click", () => {
-  alert("Daily reward is added automatically after your first match each day.");
-});
-
-
