@@ -289,6 +289,9 @@ socket.on("result", (data) => {
   if (playerStats) {
     playerStats.style.display = "block";
   }
+  if (dailyRewardBox) {
+    dailyRewardBox.style.display = "block";
+  }
 });
 
 socket.on("opponentLeft", () => {
@@ -301,7 +304,7 @@ socket.on("opponentLeft", () => {
 
   statusText.innerText = "Opponent Left";
 
-  ltapBtn.classList.remove("activeBtn");
+  tapBtn.classList.remove("activeBtn");
   tapBtn.innerText = "PLAY AGAIN";
   tapBtn.disabled = false;
 });
@@ -361,11 +364,20 @@ let streak = localStorage.getItem("dailyStreak") || 0;
 streakCount.innerText = streak + " Days";
 
 claimRewardBtn.addEventListener("click", () => {
+  alert("Daily reward is added automatically after your first match each day.");
+});
+
+const streakCount = document.getElementById("streakCount");
+
+let streak = localStorage.getItem("dailyStreak") || 0;
+streakCount.innerText = streak + " Days";
+
+claimRewardBtn.addEventListener("click", () => {
 
   let lastClaim = localStorage.getItem("lastClaimDate");
   let today = new Date().toDateString();
 
-  if(lastClaim === today){
+  if (lastClaim === today) {
     alert("Daily reward already claimed today!");
     return;
   }
@@ -376,9 +388,6 @@ claimRewardBtn.addEventListener("click", () => {
 
   streakCount.innerText = streak + " Days";
 
-  xp += 50;
-
-  localStorage.setItem("xp", xp);
 
   alert("Reward claimed! +50 XP");
 });
