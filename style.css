@@ -416,3 +416,8 @@ button,
   color: #00ffff;
   text-shadow: 0 0 10px #00ffff;
 }
+#installBtn {
+  margin-bottom: 18px;
+  font-size: 18px;
+  padding: 14px;
+}
