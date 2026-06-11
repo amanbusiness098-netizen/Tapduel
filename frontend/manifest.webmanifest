@@ -1,0 +1,12 @@
+{
+  "name": "TapDuel - Reaction Esports",
+  "short_name": "TapDuel",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080716",
+  "theme_color": "#7c3aed",
+  "description": "Solo and realtime reaction-speed duels.",
+  "icons": [
+    { "src": "assets/tapduel-logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

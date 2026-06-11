@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TapDuel - Reaction Esports</title>
+  <meta name="description" content="Play Solo Challenge, realtime reaction duels and private rooms on TapDuel." />
+  <meta name="theme-color" content="#7c3aed" />
+  <meta property="og:title" content="TapDuel - Reaction Esports" />
+  <meta property="og:description" content="Can you react faster than your friends? Play Solo or live duels." />
+  <meta property="og:image" content="assets/tapduel-logo.png" />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="assets/tapduel-logo.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="bg-glow"></div>
+  <header class="topbar">
+    <div class="brand"><span class="logo">⚡</span> TapDuel</div>
+    <nav>
+      <a href="#game">Play</a>
+      <a href="#leaderboard">Leaderboard</a>
+      <a href="#matches">Matches</a>
+      <a href="#shop">Shop</a>
+      <a href="#sponsor">Sponsor</a>
+    </nav>
+    <button id="loginBtn" class="btn small">Login</button>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Reaction esports mini-game</p>
+        <h1>Who taps first when the signal hits?</h1>
+        <p class="sub">Play quick matches, private rooms, climb leaderboard, unlock skins, and run sponsor-friendly
+          tournaments without gambling.</p>
+        <div class="hero-actions">
+          <a class="btn" href="#game">Start Duel</a>
+          <a class="btn ghost" href="#sponsor">Advertise / Sponsor</a>
+          <button id="shareBtn" class="btn ghost" type="button">Share</button>
+          <button id="soundToggle" class="btn ghost" type="button">Sound: On</button>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="big" id="heroBest">-- ms</div>
+        <p>Your best reaction</p>
+        <div class="pill">Free to play • Skill based • No cash staking</div>
+        <div class="live-stats"><span><b id="onlineCount">0</b> online</span><span><b id="searchingCount">0</b>
+            searching</span></div>
+      </div>
+    </section>
+
+    <section id="game" class="grid two">
+      <div class="panel game-panel">
+        <h2>Quick Match</h2>
+        <p id="statusText" class="status">Login with Google, enter username, then start.</p>
+        <div id="resultBox" class="result-box">Ready for your next duel.</div>
+        <div class="input-row">
+          <input id="usernameInput" placeholder="Your username" maxlength="20" />
+          <button id="saveNameBtn" class="btn small">Save</button>
+        </div>
+        <div class="match-actions">
+          <button id="quickBtn" class="btn">Quick Match</button>
+          <button id="soloBtn" class="btn ghost">Solo Challenge</button>
+          <button id="cancelBtn" class="btn danger">Cancel</button>
+          <button id="playAgainBtn" class="btn ghost" hidden>Play Again</button>
+          <button id="shareScoreBtn" class="btn ghost" hidden>Share Score</button>
+        </div>
+        <div class="private-box">
+          <button id="createRoomBtn" class="btn ghost">Create Private Room</button>
+          <div class="input-row">
+            <input id="roomCodeInput" placeholder="Room code" maxlength="8" />
+            <button id="joinRoomBtn" class="btn small">Join</button>
+          </div>
+          <p id="privateCode"></p>
+        </div>
+        <div id="arena" class="arena classic">
+          <div id="opponentText" class="opponent">Opponent: --</div>
+          <button id="tapBtn" class="tap-button" disabled>TAP</button>
+          <div id="reactionText" class="reaction">Reaction: --</div>
+        </div>
+      </div>
+
+      <div class="panel profile-panel">
+        <h2>Profile</h2>
+        <div id="profileBox" class="profile-box">Not loaded yet.</div>
+        <div class="ad-box">Ad / sponsor banner placeholder</div>
+      </div>
+    </section>
+
+    <section id="leaderboard" class="panel">
+      <div class="section-head">
+        <h2>Leaderboard</h2>
+        <button id="refreshLeaderboard" class="btn small">Refresh</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Player</th>
+              <th>RP</th>
+              <th>Wins</th>
+              <th>Best</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="matches" class="panel">
+      <div class="section-head">
+        <h2>Latest Matches</h2>
+        <button id="refreshMatches" class="btn small ghost">Refresh</button>
+      </div>
+      <div id="latestMatches" class="latest-matches">No matches yet.</div>
+    </section>
+
+    <section id="shop" class="grid two">
+      <div class="panel">
+        <h2>Shop</h2>
+        <p>Buy with coins only for now. Coins are virtual rewards only — no cash value, no withdrawal, no betting, no
+          staking.</p>
+        <div id="shopGrid" class="shop-grid"></div>
+      </div>
+      <div class="panel">
+        <h2>Tournament Mode</h2>
+        <p>Free-entry tournaments for colleges, creators, and sponsors. Prize pools are sponsor-funded only. Players
+          never pay entry fees.</p>
+
+        <ul class="clean-list">
+          <li>✅ Free entry</li>
+          <li>✅ Sponsor-funded rewards</li>
+          <li>✅ Monthly leaderboard challenge</li>
+          <li>❌ No cash staking</li>
+          <li>❌ No withdrawal</li>
+        </ul>
+        <div class="tournament-card">
+          <h3>Daily Speed Cup</h3>
+          <p>Free-entry leaderboard cup. Sponsors can reward badges, merch, or shoutouts.</p>
+          <button class="btn ghost" disabled>Coming Soon</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="sponsor" class="panel sponsor">
+      <h2>Advertise / Sponsor TapDuel</h2>
+      <p>Promote your brand, college event, creator room, or sponsor a free-entry TapDuel tournament. Players never
+        stake cash.</p>
+      <form id="contactForm" class="contact-form">
+        <input name="name" placeholder="Name / Brand" required />
+        <input name="email" type="email" placeholder="Email" required />
+        <select name="type">
+          <option value="sponsor">Sponsor</option>
+          <option value="college">College event</option>
+          <option value="creator">Creator room</option>
+          <option value="advertise">Advertising</option>
+        </select>
+        <textarea name="message" placeholder="Tell us your campaign goal, budget, and tournament idea"></textarea>
+        <button class="btn" type="submit">Send Lead</button>
+      </form>
+      <p id="contactResult"></p>
+    </section>
+  </main>
+
+  <footer>
+    <p>TapDuel © 2026 • Free skill game • Coins are virtual only • No cash withdrawal • No betting/staking</p>
+    <div class="footer-links">
+      <a href="legal/privacy.html">Privacy</a>
+      <a href="legal/terms.html">Terms</a>
+      <a href="legal/rules.html">Game Rules</a>
+      <a href="legal/refunds.html">Refunds</a>
+      <a href="#sponsor">Contact</a>
+    </div>
+  </footer>
+  <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+  <script src="https://tapduel.onrender.com/socket.io/socket.io.js"></script>
+  <script src="config.js"></script>
+  <script type="module" src="auth.js"></script>
+  <script type="module" src="script.js?v=3"></script>
+</body>
+
+</html>

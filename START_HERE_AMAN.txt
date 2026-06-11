@@ -1,0 +1,12 @@
+TAPDUEL HARDENED FINAL PACK
+
+1. Read docs/START_HERE.md
+2. Copy backend/.env.example to backend/.env
+3. Add backend/firebase-key.json locally only
+4. Add your email to ADMIN_EMAILS
+5. Keep PAYMENTS_ENABLED=false
+6. Run: npm run install:backend
+7. Run: npm run dev
+8. Test using docs/TEST_CHECKLIST.md
+
+Never upload .env, firebase-key.json or node_modules.

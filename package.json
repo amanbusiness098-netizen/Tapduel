@@ -1,0 +1,15 @@
+{
+  "name": "tapduel-pro-mvp-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix backend run dev",
+    "start": "npm --prefix backend start",
+    "install:backend": "npm --prefix backend install"
+  },
+  "dependencies": {
+    "devl": "^2.0.0",
+    "master": "^2.0.2",
+    "run": "^1.5.0"
+  }
+}

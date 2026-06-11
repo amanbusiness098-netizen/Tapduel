@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TapDuel Admin</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <main>
+    <section id="loginPanel">
+      <h1>TapDuel Admin</h1>
+      <p>Only an email/UID listed in the backend ADMIN_EMAILS or ADMIN_UIDS setting can access data.</p>
+      <button id="login">Login with Google</button>
+      <pre id="raw">Admin login required.</pre>
+    </section>
+
+    <div id="dashboard" hidden>
+      <div class="top">
+        <div>
+          <h1>TapDuel Admin</h1>
+          <p class="warn">Private dashboard. Signed in as <span id="adminUser"></span>.</p>
+        </div>
+        <div><button id="refresh">Refresh</button> <button id="logout">Logout</button></div>
+      </div>
+      <div class="cards">
+        <div class="card"><span>Total Users</span><b id="users">--</b></div>
+        <div class="card"><span>Matches</span><b id="matches">--</b></div>
+        <div class="card"><span>Leads</span><b id="leads">--</b></div>
+        <div class="card"><span>Waiting</span><b id="waiting">--</b></div>
+        <div class="card"><span>Active Rooms</span><b id="rooms">--</b></div>
+        <div class="card"><span>Firebase</span><b id="firebase">--</b></div>
+      </div>
+      <section><h2>Recent Users</h2><div id="userList" class="list"></div></section>
+      <section><h2>Recent Matches</h2><div id="matchList" class="list"></div></section>
+      <section><h2>Sponsor Leads</h2><div id="leadList" class="list"></div></section>
+      <pre id="raw"></pre>
+    </div>
+  </main>
+  <script src="config.js"></script>
+  <script type="module" src="admin.js"></script>
+</body>
+</html>
