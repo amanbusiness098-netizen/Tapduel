@@ -680,12 +680,41 @@ io.on('connection', socket => {
     }
     if (room.clicks[socket.id]) return ack({ ok: false, error: 'Tap already registered.' });
     const now = Date.now();
-    const reaction = Math.max(0, now - room.startAt);
-    const clientValue = Number(clientReaction);
-    if (Number.isFinite(clientValue) && (clientValue < 50 || clientValue > 10000)) memory.suspicious.push({ uid: sockets.get(socket.id)?.uid, clientReaction: clientValue, serverReaction: reaction, at: now });
-    room.clicks[socket.id] = { serverTapAt: now, clientTapAt: Number(clientTapAt || now), clientReaction: Number.isFinite(clientValue) ? clientValue : null, reaction };
-    socket.emit('tapRegistered', { reaction, clientReaction: Number.isFinite(clientValue) ? Math.round(clientValue) : null });
-    ack({ ok: true });
+const serverReaction = Math.max(0, now - room.startAt);
+const clientValue = Number(clientReaction);
+
+const validClientReaction =
+  Number.isFinite(clientValue) &&
+  clientValue >= 50 &&
+  clientValue <= 10000 &&
+  clientValue <= serverReaction + 1500;
+
+if (!validClientReaction && Number.isFinite(clientValue)) {
+  memory.suspicious.push({
+    uid: sockets.get(socket.id)?.uid,
+    clientReaction: clientValue,
+    serverReaction
+  });
+}
+
+const effectiveReaction = validClientReaction
+  ? Math.round(clientValue)
+  : Math.round(serverReaction);
+
+room.clicks[socket.id] = {
+  reaction: effectiveReaction,
+  serverReaction: Math.round(serverReaction),
+  serverTapAt: now,
+  clientTapAt: Number(clientTapAt || now),
+  clientReaction: validClientReaction ? Math.round(clientValue) : null
+};
+
+socket.emit('tapRegistered', {
+  reaction: effectiveReaction,
+  clientReaction: validClientReaction ? Math.round(clientValue) : null
+});
+
+ack({ ok: true });
     if (room.clicks[opponentId]) {
       const [a, b] = room.players;
       const winnerId = room.clicks[a].reaction <= room.clicks[b].reaction ? a : b;
