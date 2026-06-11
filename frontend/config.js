@@ -1,8 +1,13 @@
 // TapDuel frontend config
+const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+const backendUrl = isLocal
+  ? 'http://localhost:3000'
+  : 'https://tapduel.onrender.com';
 
 window.TAPDUEL_CONFIG = {
-  API_BASE: 'http://localhost:3000',
-  SOCKET_URL: 'http://localhost:3000',
+  API_BASE: backendUrl,
+  SOCKET_URL: backendUrl,
 
   firebaseConfig: {
     apiKey: "AIzaSyCBQakzaEjRpJkxIMgsjlPfT3SjZ6p5o-A", authDomain: "tapduel-4670c.firebaseapp.com",
